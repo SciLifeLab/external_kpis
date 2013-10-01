@@ -5,3 +5,9 @@ user_cred.txt
 d3/
 getLocalData.php
 *.*_prev
+*.json
+01_pie.html
+applications_projects_pie.html
+applications_samples_pie.html
+deltimes_pie.html
+histo_ex.html
