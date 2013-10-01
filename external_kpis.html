@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>External KPIs</title>
+		<script type="text/javascript" src="../d3/d3.v3.js"></script>
+		<script type="text/javascript" src="external_kpis.js"></script>
+        <link rel="stylesheet" type="text/css" href="external_kpis.css">
+		
+	</head>
+	<body>
+		<div id="delivery_times">
+			<h2>Delivery times</h2>
+		</div>
+		<div id="application_projects">
+			<h2>Applications (projects)</h2>			
+		</div>
+		<div id="application_samples">
+			<h2>Applications (samples)</h2>			
+		</div>
+		<br id="clear">
+		<div id="reads_per_lane">
+			<h2>Reads / lane</h2>
+			<div id="ho_reads_per_lane" class="reads_per_lane">
+				<h3>HiSeq High Output</h3>			
+			</div>
+			<div id="rapid_reads_per_lane" class="reads_per_lane">
+				<h3>HiSeq Rapid</h3>			
+			</div>
+			<div id="miseq_reads_per_lane" class="reads_per_lane">
+				<h3>MiSeq</h3>			
+			</div>
+		</div>
+		<script type="text/javascript">
+            var today = new Date(); // today
+			var twelveWeeks = new Date( today.getTime() - 12 * 7 * 1000*60*60*24);
+			//var delTimeUrl ="testdata.json";
+			//var url = "http://localhost:8888/dev/external_kpis/getCouchDbData.php?view=projects?group_level=1";
+			var delTimeUrl ="getCouchDbData.php?db=projects&design=kpi_external&view=projects&group_level=1";
+			d3.json(delTimeUrl, function(json) {
+				var dataset = makeDeltimeDataset(json);
+				//console.log(dataset);
+				drawDelTimes(dataset);
+				
+			});
+
+			//var applProjUrl ="testdata_appl_proj.json";
+			//var applProjUrl = "http://localhost:8888/dev/external_kpis/getCouchDbData.php?view=applications_projects?group_level=1";
+			var applProjUrl = "getCouchDbData.php?db=projects&design=kpi_external&view=applications_projects&group_level=1";
+			d3.json(applProjUrl, function(json) {
+				var dataset = json.rows;
+				console.log(dataset);
+				drawApplProj(dataset);
+				
+			});
+			//var applSampleUrl ="testdata_appl_samples.json";
+			//var applSampleUrl = "http://localhost:8888/dev/external_kpis/getCouchDbData.php?view=applications_samples?group_level=1";
+			var applSampleUrl = "getCouchDbData.php?db=projects&design=kpi_external&view=applications_samples?group_level=1";
+			d3.json(applSampleUrl, function(json) {
+				var dataset = json.rows;
+				//console.log(dataset);
+				drawApplSample(dataset);
+				
+			});
+			//var readsUrl ="testdata_histo.json";
+			var readsUrl = "getCouchDbData.php?db=flowcells&design=reads&view=per_lane&reduce=false";
+			d3.json(readsUrl, function(json) {
+				//var data = makeReadsDataset(json);
+				var hoData = makeReadsDataset(json, twelveWeeks, "HighOutput");
+				var rapidData = makeReadsDataset(json, twelveWeeks, "RapidRun");
+				var miseqData = makeReadsDataset(json, twelveWeeks, "MiSeq");
+				//console.log(dataset);
+				drawReads(hoData, "ho_reads_per_lane");
+				drawReads(rapidData, "rapid_reads_per_lane");
+				drawReads(miseqData, "miseq_reads_per_lane");
+				
+			});
+			
+			
+		</script>
+	</body>
+</html>

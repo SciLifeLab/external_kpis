@@ -1,0 +1,56 @@
+text {
+    font-family: sans-serif;
+    font-size: 12px;
+    fill: white;
+}
+#application_projects,
+#application_samples {
+    float: left;
+    margin: 20px;
+}
+#delivery_times {
+    float: left;
+    margin-left: 40px;
+}
+.reads_per_lane {
+    float: left;
+    margin-left: 5px;
+}
+
+br#clear {
+    clear: both;
+}
+
+body {
+    font: 10px sans-serif;
+}
+
+.bar rect {
+    fill: steelblue;
+    shape-rendering: crispEdges;
+}
+
+.bar text {
+    fill: #fff;
+    /*fill: #000;*/
+    font-size: 9px;
+}
+/*#reads_per_lane text {*/
+/*	fill: #000;	*/
+/*}*/
+.axis path, .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+.tick text {
+    fill: #000;	
+}
+.axis_label {
+  font-family: sans-serif;
+  font-size: 12px;
+  fill: #CCCCCC;
+  fill: #000;
+  text-anchor: middle;
+  text-anchor: end;
+}
