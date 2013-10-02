@@ -4,20 +4,36 @@ text {
     fill: white;
 }
 #application_projects,
-#application_samples {
+#application_samples{
     float: left;
-    margin: 20px;
+    margin: 5px 0px 0px 0px;
+}
+#affiliations {
+    float: left;
+    margin: 5px 0px 0px 20px;
 }
 #delivery_times {
     float: left;
-    margin-left: 40px;
+    /*margin-left: 30px;*/
+    /*margin-right: 10px;*/
+    margin: 0px 20px 20px 20px;
+}
+#reads_per_lane {
+    margin-left: 20px;
+}
+#date_info {
+    font: 12px sans-serif;    
+    margin: 0px 0px 0px 0px;
+}
+h1 {
+    margin-bottom: 0px;    
 }
 .reads_per_lane {
     float: left;
     margin-left: 5px;
 }
 
-br#clear {
+br.clear {
     clear: both;
 }
 
@@ -44,7 +60,8 @@ body {
     shape-rendering: crispEdges;
 }
 .tick text {
-    fill: #000;	
+    fill: #000;
+    font-size: 11px;
 }
 .axis_label {
   font-family: sans-serif;

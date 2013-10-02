@@ -1,19 +1,122 @@
-function makeDeltimeDataset(json) {
+//function makeDeltimeDataset(json) {
+//    var data = [];
+//    var rows = json["rows"];
+//    //console.log(rows);
+//    for (var i = 0; i < rows.length; i++) {
+//        //console.log("i: " + i);
+//        var ka = rows[i]["key"];
+//        var k = ka[0];
+//        if(k == null) { continue; }
+//        var v = rows[i]["value"];
+//        var dp = new Object;
+//        dp["key"] = k;
+//        dp["value"] = v;
+//        data.push(dp);
+//    }
+//    return data.sort(sortCats);
+//}
+
+// New way: Use the unreduced view & filter on a startDate
+function makeDeltimeDataset(json, startDate) {
     var data = [];
     var rows = json["rows"];
     //console.log(rows);
-    for (var i = 0; i < rows.length; i++) {
-        //console.log("i: " + i);
-        var ka = rows[i]["key"];
-        var k = ka[0];
-        if(k == null) { continue; }
-        var v = rows[i]["value"];
-        var dp = new Object;
-        dp["key"] = k;
-        dp["value"] = v;
-        data.push(dp);
+    var dformat = d3.time.format("%Y-%m-%d");
+    var startDateStr;
+    if (startDate) {
+        startDateStr = dformat(startDate);
+        //console.log("start date: " + startDateStr);
     }
+    //console.log(rows);
+    var nums = new Object;
+    for (var i = 0; i < rows.length; i++) {
+        var ka = rows[i]["key"];
+        var bin = ka[0]; // bin name
+        if(bin == null) { continue; }
+        var v = rows[i]["value"];
+        var qd = v["Queue date"];
+        //console.log(bin + ", " + qd);
+        if(startDateStr != undefined && qd < startDateStr) {
+            //console.log("skipping");
+            continue;
+        } //skip if queue date is before startDate
+        if(nums[bin]) {
+            nums[bin]++;
+        } else {
+            nums[bin] = 1;
+        }
+    }
+    for(bin in nums) {
+        data.push( {"key": bin, "value": nums[bin]} );
+    }
+    
     return data.sort(sortCats);
+}
+function makeApplProjDataset(json, startDate) {
+    var data = [];
+    var rows = json["rows"];
+    //console.log(rows);
+    var dformat = d3.time.format("%Y-%m-%d");
+    var startDateStr;
+    if (startDate) {
+        startDateStr = dformat(startDate);
+        //console.log("start date: " + startDateStr);
+    }
+    //console.log(rows);
+    var nums = new Object;
+    for (var i = 0; i < rows.length; i++) {
+        var application = rows[i]["key"];
+        var v = rows[i]["value"];
+        var od = v[1];
+        //console.log(bin + ", " + qd);
+        if(startDateStr != undefined && od < startDateStr) {
+            //console.log("skipping");
+            continue;
+        } //skip if queue date is before startDate
+        if(nums[application]) {
+            nums[application]++;
+        } else {
+            nums[application] = 1;
+        }
+    }
+    for(application in nums) {
+        data.push( {"key": application, "value": nums[application]} );
+    }
+    return data;
+}
+
+function makeApplSampleDataset(json, startDate) {
+    var data = [];
+    var rows = json["rows"];
+    //console.log(rows);
+    var dformat = d3.time.format("%Y-%m-%d");
+    var startDateStr;
+    if (startDate) {
+        startDateStr = dformat(startDate);
+        //console.log("start date: " + startDateStr);
+    }
+    //console.log(rows);
+    var nums = new Object;
+    for (var i = 0; i < rows.length; i++) {
+        var application = rows[i]["key"];
+        var v = rows[i]["value"];
+        var od = v[1];
+        var samples = v[0];
+        //console.log(bin + ", " + qd);
+        if(startDateStr != undefined && od < startDateStr) {
+            //console.log("skipping");
+            continue;
+        } //skip if queue date is before startDate
+        if(nums[application]) {
+            nums[application] += samples;
+        } else {
+            nums[application] = samples;
+        }
+    }
+    for(application in nums) {
+        data.push( {"key": application, "value": nums[application]} );
+    }
+    return data;
 }
 
 function makeReadsDataset(json, startDate, filter) {
@@ -42,6 +145,40 @@ function makeReadsDataset(json, startDate, filter) {
         if(val != null) { values.push(val/1e6); }
     }
     return values;
+}
+
+//makeAffiliationDataset(json, twelveWeeks)
+function makeAffiliationDataset(json, startDate) {
+    var rows = json.rows;
+    //console.log(rows);
+    var nums = new Object;
+    for (var i = 0; i < rows.length; i++) {
+        var date;
+        if(startDate != undefined) {
+            date = new Date(rows[i]["key"][0]);
+            if (date < startDate) { continue; }
+        }
+        var aff = rows[i]["key"][1];
+        if(nums[aff]) {
+            nums[aff]++;
+        } else {
+            nums[aff] = 1;
+        }
+    }
+    var data = [];
+    for(a in nums) {
+        if(a != "null") {
+            data.push( {"key": a, "value": nums[a]} );
+        }
+    }
+    data.sort(function (a,b) {
+       return a.key > b.key?1:-1;
+    });
+    if(nums["null"]) {
+        data.push( {"key": "null", "value": nums["null"]} );
+    }
+    //console.log(data);
+    return data;
 }
 var sortCats = function (a, b) {
     var order = [];
@@ -100,7 +237,7 @@ function drawDelTimes(dataset) {
                   .enter()
                   .append("g")
                   .attr("class", "arc")
-                  .attr("transform", "translate(" + outerRadius + "," + outerRadius + ")");
+                  .attr("transform", "translate(" + outerRadius + "," + (outerRadius + 20) + ")");
     
     //Draw arc paths
     arcs.append("path")
@@ -147,9 +284,11 @@ function drawDelTimes(dataset) {
 }
 
 function drawApplProj(dataset) {
-    var w = 400;
+    //var w = 400;
+    var w = 300;
     var h = 300;
-    padding = 150;
+    //padding = 150;
+    padding = w - 250;
     
         
     //var outerRadius = w / 2;
@@ -194,8 +333,8 @@ function drawApplProj(dataset) {
                   .enter()
                   .append("g")
                   .attr("class", "arc")
-                  //.attr("transform", "translate(" + outerRadius + "," + outerRadius + ")")
-                  .attr("transform", "translate(" + 1.5*outerRadius + "," + 1.2*outerRadius + ")")
+                  .attr("transform", "translate(" + w/2 + "," + (outerRadius + 20) + ")")
+                  //.attr("transform", "translate(" + 1.5*outerRadius + "," + 1.2*outerRadius + ")")
                   ;
     
     //Draw arc paths
@@ -205,34 +344,35 @@ function drawApplProj(dataset) {
         })
         .attr("d", arc);
     
-    //Labels
-    //arcs.append("text")
-    arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; }).append("svg:text")
-        //.attr("transform", function(d) {
-        //	return "translate(" + (arc.centroid(d) + outerRadius) + ")";
-        //})					
-        .attr("transform", function(d) {
-            var c = arc.centroid(d),
-            x = c[0],
-            y = c[1],
-            // pythagorean theorem for hypotenuse
-            h = Math.sqrt(x*x + y*y);
-            return "translate(" + (x/h * labelr) +  ',' +
-            (y/h * labelr) +  ")"; 
-        })
-        //.attr("text-anchor", "middle")
-        //.attr("text-anchor", "start")
-        .attr("text-anchor", function(d) {
-            // are we past the center?
-            return (d.endAngle + d.startAngle)/2 > Math.PI ?
-                "end" : "start";
-        })
-        .attr("style", "fill: black")
-        .text(function(d) {
-            //return d.value;
-            //return d.data.key + ": " + d.value;
-            return d.data.key;
-        });
+    ////Labels
+    ////arcs.append("text")
+    //arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; }).append("svg:text")
+    //    //.attr("transform", function(d) {
+    //    //	return "translate(" + (arc.centroid(d) + outerRadius) + ")";
+    //    //})					
+    //    .attr("transform", function(d) {
+    //        var c = arc.centroid(d),
+    //        x = c[0],
+    //        y = c[1],
+    //        // pythagorean theorem for hypotenuse
+    //        h = Math.sqrt(x*x + y*y);
+    //        return "translate(" + (x/h * labelr) +  ',' +
+    //        (y/h * labelr) +  ")"; 
+    //    })
+    //    //.attr("text-anchor", "middle")
+    //    //.attr("text-anchor", "start")
+    //    .attr("text-anchor", function(d) {
+    //        // are we past the center?
+    //        return (d.endAngle + d.startAngle)/2 > Math.PI ?
+    //            "end" : "start";
+    //    })
+    //    .attr("style", "fill: black")
+    //    .text(function(d) {
+    //        //return d.value;
+    //        //return d.data.key + ": " + d.value;
+    //        return d.data.key;
+    //    });
+
     arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; }).append("svg:text")
       .attr("dy", ".35em")
       //.attr("dy", "1.1em")
@@ -254,9 +394,9 @@ function drawApplProj(dataset) {
 }
 
 function drawApplSample(dataset) {
-    var w = 500;
+    var w = 400;
     var h = 300;
-    padding = 250;
+    padding = w - 250;
     
          
     //var outerRadius = w / 2;
@@ -302,7 +442,8 @@ function drawApplSample(dataset) {
                   .append("g")
                   .attr("class", "arc")
                   //.attr("transform", "translate(" + outerRadius + "," + outerRadius + ")")
-                  .attr("transform", "translate(" + 1.5*outerRadius + "," + 1.2*outerRadius + ")")
+                  //.attr("transform", "translate(" + 1.5*outerRadius + "," + 1.2*outerRadius + ")")
+                  .attr("transform", "translate(" + w/3 + "," + (outerRadius + 20) + ")")
                   ;
     
     //Draw arc paths
@@ -312,34 +453,34 @@ function drawApplSample(dataset) {
         })
         .attr("d", arc);
     
-    //Labels
-    //arcs.append("text")
-    arcs.filter(function(d) { return d.endAngle - d.startAngle > .15; }).append("svg:text")
-        //.attr("transform", function(d) {
-        //	return "translate(" + (arc.centroid(d) + outerRadius) + ")";
-        //})					
-        .attr("transform", function(d) {
-            var c = arc.centroid(d),
-            x = c[0],
-            y = c[1],
-            // pythagorean theorem for hypotenuse
-            h = Math.sqrt(x*x + y*y);
-            return "translate(" + (x/h * labelr) +  ',' +
-            (y/h * labelr) +  ")"; 
-        })
-        //.attr("text-anchor", "middle")
-        //.attr("text-anchor", "start")
-        .attr("text-anchor", function(d) {
-            // are we past the center?
-            return (d.endAngle + d.startAngle)/2 > Math.PI ?
-                "end" : "start";
-        })
-        .attr("style", "fill: black")
-        .text(function(d) {
-            //return d.value;
-            //return d.data.key + ": " + d.value;
-            return d.data.key;
-        });
+    ////Labels
+    ////arcs.append("text")
+    //arcs.filter(function(d) { return d.endAngle - d.startAngle > .15; }).append("svg:text")
+    //    //.attr("transform", function(d) {
+    //    //	return "translate(" + (arc.centroid(d) + outerRadius) + ")";
+    //    //})					
+    //    .attr("transform", function(d) {
+    //        var c = arc.centroid(d),
+    //        x = c[0],
+    //        y = c[1],
+    //        // pythagorean theorem for hypotenuse
+    //        h = Math.sqrt(x*x + y*y);
+    //        return "translate(" + (x/h * labelr) +  ',' +
+    //        (y/h * labelr) +  ")"; 
+    //    })
+    //    //.attr("text-anchor", "middle")
+    //    //.attr("text-anchor", "start")
+    //    .attr("text-anchor", function(d) {
+    //        // are we past the center?
+    //        return (d.endAngle + d.startAngle)/2 > Math.PI ?
+    //            "end" : "start";
+    //    })
+    //    .attr("style", "fill: black")
+    //    .text(function(d) {
+    //        //return d.value;
+    //        //return d.data.key + ": " + d.value;
+    //        return d.data.key;
+    //    });
 
     arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; }).append("svg:text")
       .attr("dy", ".35em")
@@ -359,12 +500,53 @@ function drawApplSample(dataset) {
       .style("font", "bold 12px Arial")
       //.style("font", "12px Arial")
       .text(function(d) { return d.data.value; });
+
+    //Legend
+    var legendXOffset = 2*outerRadius + 20;
+    
+    var legend = svg.append("g")
+      .attr("class", "legend")
+      //.attr("x", w - 165)
+      .attr("x", legendXOffset)
+      .attr("y", 25)
+      .attr("height", 100)
+      .attr("width", 100);
+
+    legend.selectAll('rect')
+      .data(pie(dataset))
+      .enter()
+      .append("rect")
+	  //.attr("x", w - 165)
+	  .attr("x", legendXOffset)
+      .attr("y", function(d, i){ return i *  20;})
+	  .attr("width", 10)
+	  .attr("height", 10)
+	  .style("fill", function(d, i) { 
+        //var color = color_hash[dataset.indexOf(d)][1];
+        //return color;
+        return color(i);
+      })
+      
+    legend.selectAll('text')
+      .data(pie(dataset))
+      .enter()
+      .append("text")
+	  //.attr("x", w - 152)
+	  .attr("x", legendXOffset + 13)
+      .attr("y", function(d, i){ return i *  20 + 9;})
+      .attr("style", "fill: black")
+	  .text(function(d) {
+        //var text = color_hash[dataset.indexOf(d)][0];
+        var text = d.data.key;
+        return text;
+      });
+   
 }
 function drawReads(values, divID) {
-    var margin = {top: 10, right: 30, bottom: 30, left: 30},
+    var margin = {top: 10, right: 30, bottom: 30, left: 10},
         //width = 960 - margin.left - margin.right,
         //height = 500 - margin.top - margin.bottom
-        width = 400 - margin.left - margin.right,
+        width = 320 - margin.left - margin.right,
         height = 180 - margin.top - margin.bottom
         ;
     var formatCount = d3.format(",.0f");
@@ -389,7 +571,7 @@ function drawReads(values, divID) {
         //.bins(x.ticks(20))
         .bins(x.ticks(14))
         (values);
-    console.log(data);
+    //console.log(data);
     
     var y = d3.scale.linear()
         .domain([0, d3.max(data, function(d) { return d.y; })])
@@ -435,7 +617,7 @@ function drawReads(values, divID) {
 
     svg.append("text")
         //.attr("transform", "rotate(-90)")
-        .attr("y", height +  margin.bottom)
+        .attr("y", height +  margin.bottom - 2)
         .attr("x", width)
         .attr("class", "axis_label")
         .text("reads (millions)");
@@ -443,8 +625,163 @@ function drawReads(values, divID) {
     svg.append("text")
         //.attr("transform", "rotate(-90)")
         .attr("y", margin.top)
-        .attr("x", margin.left)
+        //.attr("x", margin.left)
+        .attr("x", margin.left + 20)
+        .attr("text-anchor", "start")
         .attr("class", "axis_label")
         .text("# lanes");
             
+}
+
+function drawAffiliationProj(dataset, divID) {
+    var w = 400;
+    //var w = 300;
+    var h = 300;
+    //padding = 150;
+    padding = w - 250;
+    
+        
+    //var outerRadius = w / 2;
+    var outerRadius = (w - padding) / 2;
+    var innerRadius = 0;
+    var labelr = outerRadius + 10;
+    //var innerRadius = 50;
+    var startA = 0;
+    var endA = Math.PI * 2;
+    //var startA = - Math.PI/2;
+    //var endA = Math.PI/2;
+    var arc = d3.svg.arc()
+                    .innerRadius(innerRadius)
+                    .outerRadius(outerRadius);
+    
+    var pie = d3.layout.pie()
+                .value(function(d) {
+                    return d.value;
+                })
+                .sort(null)
+                .startAngle(startA)
+                .endAngle(endA)
+                ;
+    
+    
+    //Easy colors accessible via a x-step ordinal scale
+    //var color = d3.scale.category10();
+    //var color = d3.scale.category20();
+    //var color = d3.scale.category20b();
+    var color = d3.scale.category20c();
+    
+    //Create SVG element
+    //var svg = d3.select("body")
+    //var svg = d3.select("#application_projects")
+    var svg = d3.select("#" + divID)
+                .append("svg")
+                .attr("width", w)
+                .attr("height", h);
+    
+    //Set up groups
+    var arcs = svg.selectAll("g.arc")
+                  .data(pie(dataset))
+                  .enter()
+                  .append("g")
+                  .attr("class", "arc")
+                  //.attr("transform", "translate(" + w/2 + "," + (outerRadius + 20) + ")")
+                  .attr("transform", "translate(" + w/3 + "," + (outerRadius + 20) + ")")
+                  ;
+    
+    //Draw arc paths
+    arcs.append("path")
+        .attr("fill", function(d, i) {
+            return color(i);
+        })
+        .attr("d", arc);
+    
+    ////Labels
+    //arcs.append("text")
+    ////arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; }).append("svg:text")
+    //    //.attr("transform", function(d) {
+    //    //	return "translate(" + (arc.centroid(d) + outerRadius) + ")";
+    //    //})					
+    //    .attr("transform", function(d) {
+    //        var c = arc.centroid(d),
+    //        x = c[0],
+    //        y = c[1],
+    //        // pythagorean theorem for hypotenuse
+    //        h = Math.sqrt(x*x + y*y);
+    //        return "translate(" + (x/h * labelr) +  ',' +
+    //        (y/h * labelr) +  ")"; 
+    //    })
+    //    //.attr("text-anchor", "middle")
+    //    //.attr("text-anchor", "start")
+    //    .attr("text-anchor", function(d) {
+    //        // are we past the center?
+    //        return (d.endAngle + d.startAngle)/2 > Math.PI ?
+    //            "end" : "start";
+    //    })
+    //    .attr("style", "fill: black")
+    //    .text(function(d) {
+    //        //return d.value;
+    //        //return d.data.key + ": " + d.value;
+    //        return d.data.key;
+    //    });
+
+    //arcs.append("text")
+    arcs.filter(function(d) { return d.endAngle - d.startAngle > .15; }).append("svg:text")
+      .attr("dy", ".35em")
+      //.attr("dy", "1.1em")
+      .attr("text-anchor", "middle")
+      //.attr("text-anchor", "start")
+      //.attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; })
+      .attr("transform", function(d) { //set the label's origin to the center of the arc
+        //we have to make sure to set these before calling arc.centroid
+        d.outerRadius = outerRadius; // Set Outer Coordinate
+        d.innerRadius = outerRadius/2; // Set Inner Coordinate
+        //return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
+        return "translate(" + (arc.centroid(d)) + ")";
+      })
+      .style("fill", "White")
+      .style("font", "bold 12px Arial")
+      //.style("font", "12px Arial")
+      .text(function(d) { return d.data.value; });
+
+    //Legend
+    var legendXOffset = 2*outerRadius + 20;
+    
+    var legend = svg.append("g")
+      .attr("class", "legend")
+      //.attr("x", w - 165)
+      .attr("x", legendXOffset)
+      .attr("y", 25)
+      .attr("height", 100)
+      .attr("width", 100);
+
+    legend.selectAll('rect')
+      .data(pie(dataset))
+      .enter()
+      .append("rect")
+	  //.attr("x", w - 165)
+	  .attr("x", legendXOffset)
+      .attr("y", function(d, i){ return i *  20;})
+	  .attr("width", 10)
+	  .attr("height", 10)
+	  .style("fill", function(d, i) { 
+        //var color = color_hash[dataset.indexOf(d)][1];
+        //return color;
+        return color(i);
+      })
+      
+    legend.selectAll('text')
+      .data(pie(dataset))
+      .enter()
+      .append("text")
+	  //.attr("x", w - 152)
+	  .attr("x", legendXOffset + 13)
+      .attr("y", function(d, i){ return i *  20 + 9;})
+      .attr("style", "fill: black")
+	  .text(function(d) {
+        //var text = color_hash[dataset.indexOf(d)][0];
+        var text = d.data.key;
+        return text;
+      });
+
+
 }
