@@ -32,10 +32,14 @@ function makeDeltimeDataset(json, startDate) {
     for (var i = 0; i < rows.length; i++) {
         var ka = rows[i]["key"];
         var bin = ka[0]; // bin name
-        if(bin == null) { continue; }
         var v = rows[i]["value"];
         var qd = v["Queue date"];
         //console.log(bin + ", " + qd);
+        if(bin == null) { continue; }
+        //if(bin == null) {
+        //    if(qd == "0000-00-00") { continue; }
+        //    bin = "Not closed";
+        //}
         if(startDateStr != undefined && qd < startDateStr) {
             //console.log("skipping");
             continue;
@@ -186,6 +190,7 @@ var sortCats = function (a, b) {
     order["6-12 w"] = 2;
     order["12-24 w"] = 3;
     order["24-52 w"] = 4;
+    order["Not closed"] = 5;
     //if(order[a.value] < order[b.value]) {
     //	return a;
     //} else {
