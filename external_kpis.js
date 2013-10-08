@@ -1,22 +1,23 @@
-//function makeDeltimeDataset(json) {
-//    var data = [];
-//    var rows = json["rows"];
-//    //console.log(rows);
-//    for (var i = 0; i < rows.length; i++) {
-//        //console.log("i: " + i);
-//        var ka = rows[i]["key"];
-//        var k = ka[0];
-//        if(k == null) { continue; }
-//        var v = rows[i]["value"];
-//        var dp = new Object;
-//        dp["key"] = k;
-//        dp["value"] = v;
-//        data.push(dp);
-//    }
-//    return data.sort(sortCats);
-//}
+// Lookup table for organisations
+var organisationNames = {
+    "GU": "Göteborgs universitet",
+    "KI": "Karolinska institutet",
+    "KTH": "Kungliga tekniska högskolan",
+    "LU": "Lunds universitet",
+    "Lnu": "Linnéuniversitetet i Kalmar",
+    "NRM": "Naturhistoriska riksmuséet",
+    "SLU-Uppsala": "Sveriges lantbruksuniversitet",
+    "SU": "Stockholms universitet",
+    "UU": "Uppsala universitet",
+    "UmU": "Umeå universitet",
+}
 
-// New way: Use the unreduced view & filter on a startDate
+// Lookup table for applications
+var applicationNames = {
+    "WG re-seq": "Whole genome re-seq",
+    "de novo": "de novo seq",    
+}
+
 function makeDeltimeDataset(json, startDate) {
     var data = [];
     var rows = json["rows"];
@@ -104,10 +105,8 @@ function makeApplSampleDataset(json, startDate) {
     var nums = new Object;
     for (var i = 0; i < rows.length; i++) {
         var application = rows[i]["key"];
-        // name clarifications for some applications
-        if(application == "WG re-seq") { application = "Whole genome re-seq"; }
-        if(application == "de novo") { application = "de novo seq"; }
-        
+        // Check lookup table if there is a longer name
+        if(applicationNames[application]) { application = applicationNames[application]; }
         var v = rows[i]["value"];
         var od = v[1];
         var samples = v[0];
@@ -168,6 +167,8 @@ function makeAffiliationDataset(json, startDate) {
             if (date < startDate) { continue; }
         }
         var aff = rows[i]["key"][1];
+        // Check lookup table if there is a longer name
+        if(organisationNames[aff]) { aff = organisationNames[aff]; }
         if(nums[aff]) {
             nums[aff]++;
         } else {
@@ -644,7 +645,7 @@ function drawReads(values, divID) {
 }
 
 function drawAffiliationProj(dataset, divID) {
-    var w = 400;
+    var w = 450;
     //var w = 300;
     var h = 300;
     //padding = 150;
@@ -695,7 +696,7 @@ function drawAffiliationProj(dataset, divID) {
                   .append("g")
                   .attr("class", "arc")
                   //.attr("transform", "translate(" + w/2 + "," + (outerRadius + 20) + ")")
-                  .attr("transform", "translate(" + w/3 + "," + (outerRadius + 20) + ")")
+                  .attr("transform", "translate(" + w/3.5 + "," + (outerRadius + 20) + ")")
                   ;
     
     //Draw arc paths
