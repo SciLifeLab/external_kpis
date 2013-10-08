@@ -47,7 +47,9 @@
 			if(startDate < firstJuly) { startDate = firstJuly; }
 
             //var dateStr = startDate.getFullYear() + "-" + today.getMonth() + "-" + today.getDate();    
-            var dateStr = startDate.toDateString();    
+            startDateFormat = d3.time.format("%e %B, %Y");
+			//var dateStr = startDate.toDateString();    
+			var dateStr = startDateFormat(startDate);    
 			d3.select("#date")
                 .text(dateStr);
 			
