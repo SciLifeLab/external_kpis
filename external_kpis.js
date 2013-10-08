@@ -84,6 +84,7 @@ function makeApplProjDataset(json, startDate) {
         }
     }
     for(application in nums) {
+        //if(application == "WG re-seq") { application = "Whole genome re-seq"; }
         data.push( {"key": application, "value": nums[application]} );
     }
     return data;
@@ -103,6 +104,10 @@ function makeApplSampleDataset(json, startDate) {
     var nums = new Object;
     for (var i = 0; i < rows.length; i++) {
         var application = rows[i]["key"];
+        // name clarifications for some applications
+        if(application == "WG re-seq") { application = "Whole genome re-seq"; }
+        if(application == "de novo") { application = "de novo seq"; }
+        
         var v = rows[i]["value"];
         var od = v[1];
         var samples = v[0];
@@ -178,8 +183,8 @@ function makeAffiliationDataset(json, startDate) {
     data.sort(function (a,b) {
        return a.key > b.key?1:-1;
     });
-    if(nums["null"]) {
-        data.push( {"key": "null", "value": nums["null"]} );
+    if(nums["null"]) { // Call this category Other, even if not really true
+        data.push( {"key": "Other", "value": nums["null"]} );
     }
     //console.log(data);
     return data;
@@ -399,7 +404,7 @@ function drawApplProj(dataset) {
 }
 
 function drawApplSample(dataset) {
-    var w = 400;
+    var w = 450;
     var h = 300;
     padding = w - 250;
     
@@ -507,7 +512,7 @@ function drawApplSample(dataset) {
       .text(function(d) { return d.data.value; });
 
     //Legend
-    var legendXOffset = 2*outerRadius + 20;
+    var legendXOffset = 2*outerRadius + 30;
     
     var legend = svg.append("g")
       .attr("class", "legend")
