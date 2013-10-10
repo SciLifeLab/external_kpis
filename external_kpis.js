@@ -631,7 +631,7 @@ function drawReads(values, divID) {
         .attr("y", height +  margin.bottom - 2)
         .attr("x", width)
         .attr("class", "axis_label")
-        .text("reads (millions)");
+        .text("read pairs (millions)");
     // x axis label
     svg.append("text")
         //.attr("transform", "rotate(-90)")
