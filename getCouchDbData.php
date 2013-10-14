@@ -7,22 +7,34 @@
     
     //$group_levelStr = "group_level=2";
     if (isset($_GET['view'])) {
-        $viewStr = $_GET['view'];
+        $viewStr = addslashes($_GET['view']);
         //echo "viewstr: $viewStr<br>";
-    //} else {
-    //    $viewStr .= "?group_level=2";
+        if(strcmp($viewStr,'projects') != 0 && strcmp($viewStr, 'applications_projects') != 0 && strcmp($viewStr, 'applications_samples') != 0 && strcmp($viewStr, 'per_lane') != 0 && strcmp($viewStr, 'date_affiliation') != 0) {
+            $viewStr = "";
+        }
+        //echo "viewstr: $viewStr<br>";
     }
     if(isset($_GET['design'])) {
-        $designStr = $_GET['design'];
+        $designStr = addslashes($_GET['design']);
+        if(strcmp($designStr,'kpi_external') != 0 && strcmp($designStr, 'reads') != 0) {
+            $designStr = "";
+        }
     }
     if(isset($_GET['db'])) {
-        $dbStr = $_GET['db'];
+        $dbStr = addslashes($_GET['db']);
+        //echo $dbStr . "<br>";
+        if(strcmp($dbStr,'projects') != 0 && strcmp($dbStr, 'flowcells') != 0) {
+            $dbStr = "";
+        }
     }
     if(isset($_GET['reduce'])) {
-        $reduceStr = $_GET['reduce'];
+        $reduceStr = addslashes($_GET['reduce']);
+        if(strcmp($reduceStr,'false') != 0) {
+            $reduceStr = "";
+        }
     }
     if(isset($_GET['group_level'])) {
-        $levelStr = $_GET['group_level'];
+        $levelStr = addslashes($_GET['group_level']);
     }
     
 
