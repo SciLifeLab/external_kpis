@@ -8,6 +8,7 @@ var organisationNames = {
     "NRM": "Naturhistoriska riksmuséet",
     "SLU-Uppsala": "Sv. lantbruksuniv. - Uppsala",
     "SLU-Umea": "Sv. lantbruksuniv. - Umeå",
+    "SMI": "Smittskyddsinstitutet",
     "SU": "Stockholms universitet",
     "UU": "Uppsala universitet",
     "UmU": "Umeå universitet",
