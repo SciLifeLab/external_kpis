@@ -10,6 +10,7 @@ var organisationNames = {
     "SLU-Umea": "Sv. lantbruksuniv. - Umeå",
     "SMI": "Smittskyddsinstitutet",
     "SU": "Stockholms universitet",
+    "SVA": "Statens veterinärmed. anstalt",
     "UU": "Uppsala universitet",
     "UmU": "Umeå universitet",
 }
