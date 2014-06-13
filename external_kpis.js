@@ -652,7 +652,7 @@ function drawReads(values, divID) {
 function drawAffiliationProj(dataset, divID) {
     var w = 450;
     //var w = 300;
-    var h = 300;
+    var h = 350;
     //padding = 150;
     padding = w - 250;
     
