@@ -6,6 +6,7 @@ var organisationNames = {
     "LU": "Lunds universitet",
     "Lnu": "Linnéuniversitetet i Kalmar",
     "NRM": "Naturhistoriska riksmuséet",
+    "SH": "Södertörns högskola",
     "SLU-Alnarp": "Sv. lantbruksuniv. - Alnarp",
     "SLU-Uppsala": "Sv. lantbruksuniv. - Uppsala",
     "SLU-Umea": "Sv. lantbruksuniv. - Umeå",
