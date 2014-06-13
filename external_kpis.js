@@ -6,6 +6,7 @@ var organisationNames = {
     "LU": "Lunds universitet",
     "Lnu": "Linnéuniversitetet i Kalmar",
     "NRM": "Naturhistoriska riksmuséet",
+    "SH": "Södertörns högskola",
     "SLU-Alnarp": "Sv. lantbruksuniv. - Alnarp",
     "SLU-Uppsala": "Sv. lantbruksuniv. - Uppsala",
     "SLU-Umea": "Sv. lantbruksuniv. - Umeå",
@@ -651,7 +652,7 @@ function drawReads(values, divID) {
 function drawAffiliationProj(dataset, divID) {
     var w = 450;
     //var w = 300;
-    var h = 300;
+    var h = 350;
     //padding = 150;
     padding = w - 250;
     
