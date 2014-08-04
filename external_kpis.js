@@ -4,6 +4,7 @@ var organisationNames = {
     "KI": "Karolinska institutet",
     "KTH": "Kungliga tekniska högskolan",
     "LU": "Lunds universitet",
+    "LiU": "Linköpings universitet",
     "Lnu": "Linnéuniversitetet i Kalmar",
     "NRM": "Naturhistoriska riksmuséet",
     "SH": "Södertörns högskola",
