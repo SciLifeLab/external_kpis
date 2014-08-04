@@ -3,7 +3,9 @@ var organisationNames = {
     "GU": "Göteborgs universitet",
     "KI": "Karolinska institutet",
     "KTH": "Kungliga tekniska högskolan",
+    "KS": "Karolinska universitetssjukh.",
     "LU": "Lunds universitet",
+    "LiU": "Linköpings universitet",
     "Lnu": "Linnéuniversitetet i Kalmar",
     "NRM": "Naturhistoriska riksmuséet",
     "SH": "Södertörns högskola",
@@ -652,7 +654,7 @@ function drawReads(values, divID) {
 function drawAffiliationProj(dataset, divID) {
     var w = 450;
     //var w = 300;
-    var h = 350;
+    var h = 380;
     //padding = 150;
     padding = w - 250;
     
