@@ -3,6 +3,7 @@ var organisationNames = {
     "GU": "Göteborgs universitet",
     "KI": "Karolinska institutet",
     "KTH": "Kungliga tekniska högskolan",
+    "KS": "Karolinska universitetssjukh.",
     "LU": "Lunds universitet",
     "LiU": "Linköpings universitet",
     "Lnu": "Linnéuniversitetet i Kalmar",
