@@ -9,14 +9,14 @@
     if (isset($_GET['view'])) {
         $viewStr = addslashes($_GET['view']);
         //echo "viewstr: $viewStr<br>";
-        if(strcmp($viewStr,'projects') != 0 && strcmp($viewStr, 'applications_projects') != 0 && strcmp($viewStr, 'applications_samples') != 0 && strcmp($viewStr, 'per_lane') != 0 && strcmp($viewStr, 'date_affiliation') != 0) {
+        if(strcmp($viewStr,'projects') != 0 && strcmp($viewStr, 'applications_projects') != 0 && strcmp($viewStr, 'applications_samples') != 0 && strcmp($viewStr, 'per_lane') != 0 && strcmp($viewStr, 'date_affiliation') != 0 && strcmp($viewStr, 'dates_and_load_per_sample') != 0) {
             $viewStr = "";
         }
         //echo "viewstr: $viewStr<br>";
     }
     if(isset($_GET['design'])) {
         $designStr = addslashes($_GET['design']);
-        if(strcmp($designStr,'kpi_external') != 0 && strcmp($designStr, 'reads') != 0) {
+        if(strcmp($designStr,'kpi_external') != 0 && strcmp($designStr, 'reads') != 0 && strcmp($designStr, 'genomics-dashboard') != 0) {
             $designStr = "";
         }
     }
