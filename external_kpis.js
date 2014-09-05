@@ -25,25 +25,6 @@ var applicationNames = {
     "de novo": "de novo seq",    
 }
 
-// Remove if no longer needed
-/*
- * Array of colours suited for time series colours etc
- */
-var timeseriesColors = ["#5B87FF", "#FFC447", "#865BFF", "#FFE147"]; // colors for four series, add more?
-
-
-// Remove this when no longer needed
-/**
- * Calculates difference in days between two dates
- * @param {Date} date1	A Date object
- * @param {Date} date2	A Date object
- * @returns {Number} 	Difference in days between date2 and date1
- */
-function daydiff(date1, date2) { 
-        var day = 1000*60*60*24;
-        var diff = Math.floor((date2.getTime()-date1.getTime())/(day));
-        return diff;				
-}
 
 /* **** Helper functions **** */
 
@@ -176,32 +157,6 @@ function totalY(dataset, domain) {
     return tot;
 }
 
-
-// remove when no longer needed
-function getFirstInQueue(data) {
-    var qD = "9999-99-99";
-    var arrD = "9999-99-99";
-    var firstPid;
-    for (var i = 0; i < data.length; i++) {
-        if (data[i][0]["queueDate"] < qD) {
-            qD = data[i][0]["queueDate"];
-            arrD = data[i][0]["arrivalDate"];
-            firstPid = data[i][0]["pid"];
-        } else if (data[i][0]["queueDate"] == qD) {
-            if (data[i][0]["arrivalDate"] < arrD) {
-                arrD = data[i][0]["arrivalDate"];
-                firstPid = data[i][0]["pid"];
-            } else if (data[i][0]["arrivalDate"] == arrD) {
-                if (data[i][0]["pid"] < firstPid) {
-                    firstPid = data[i][0]["pid"];
-                }
-            }
-        }
-    }
-    return firstPid;
-}
-
-
 function makeDeltimeDataset(json, startDate) {
     var data = [];
     var rows = json["rows"];
@@ -333,7 +288,6 @@ function makeReadsDataset(json, startDate, filter) {
         }
         //console.log("mode: " + mode);
         var val = rows[i]["value"];
-        //if(val != null) { values.push(val); }
         if(val != null) { values.push(val/1e6); }
     }
     return values;
@@ -467,7 +421,6 @@ function generateQueueLaneLPStackDataset(json, cmpDate, ptype) {
     }
     //console.log(pfBins);
     
-    // remove proj name??????
     // put into "layer structure", sort & then add up y0's
     for (var projID in pfBins["HiSeq"]) {
         var hO = { x: "HiSeq", y: pfBins["HiSeq"][projID], pid: projID, queueDate: projects[projID]["queueDate"] };
@@ -586,21 +539,7 @@ function generateQueueLaneFLStackDataset(json, cmpDate, ptype) {
             pfBins[pf][pid] += v["Lanes"];
 
             if(projects[pid] == undefined) {
-                // set a limit indicator based on how long the project has been going on
-                // the limit variables are set at the beginning of this function
-
-                // these limits can be used to set colouring of project bars
-                var ongoingTime = daydiff(new Date(queueDate), cmpDate);
-                var passedTimeLimit = 0;
-                
-                if (ongoingTime > timeLimit2) {
-                    passedTimeLimit = 2;
-                } else if (ongoingTime > timeLimit1) {
-                    passedTimeLimit = 1;
-                }
-                //console.log(pid + " passedTimeLimit: " + passedTimeLimit)
-                projects[pid] = { queueDate: queueDate, passedTimeLimit: passedTimeLimit }
-                //projects[pid] = { queueDate: queueDate}
+                projects[pid] = { queueDate: queueDate}
             }
         }
         
@@ -730,9 +669,6 @@ function generateQueueSampleStackDataset(json, cmpDate, ptype) {
             //console.log("To add - app cat: " + applCat + ", pid: " + pid + ", sample: " + sampleID);
             // initialize a value for the project for all applications if it doesn't exist in applBins
             if(applBins[applCat][pid] == undefined) {
-                //for (c in cat) {
-                //    applBins[c][pid] = 0;
-                //}
                 for (var j = 0; j < cat.length; j++) {
                     applBins[cat[j]][pid] = 0;
                 }
@@ -742,19 +678,7 @@ function generateQueueSampleStackDataset(json, cmpDate, ptype) {
             applBins[applCat][pid] += 1;
 
             if(projects[pid] == undefined) {
-                // set a limit indicator based on how long the project has been going on
-                // the limit variables are set at the beginning of this function
-                // these limits can be used to set colouring of project bars
-                var ongoingTime = daydiff(new Date(queueDate), cmpDate);
-                var passedTimeLimit = 0;
-                
-                if (ongoingTime > timeLimit2) {
-                    passedTimeLimit = 2;
-                } else if (ongoingTime > timeLimit1) {
-                    passedTimeLimit = 1;
-                }
-                //console.log(pid + " passedTimeLimit: " + passedTimeLimit)
-                projects[pid] = { queueDate: queueDate, arrivalDate: arrivalDate, passedTimeLimit: passedTimeLimit }
+                projects[pid] = { queueDate: queueDate, arrivalDate: arrivalDate }
             }
             
         }
@@ -762,28 +686,13 @@ function generateQueueSampleStackDataset(json, cmpDate, ptype) {
     }
     //console.log(pfBins);
     
-    // get the last prep start date
-        // filter function to remove duplicates
-    function onlyUnique(value, index, self) { 
-        return self.indexOf(value) === index;
-    }
-    var libPrepStartDates = libPrepStartDates.filter( onlyUnique );
-    libPrepStartDates.sort();
-    
-    var ps = libPrepStartDates.pop(); // last date
-    while (ps > cmpDateStr ) { // continue pop'ing until last date is less than comparison date
-        ps = libPrepStartDates.pop();
-    }
-    var lastLibPrepStart = ps;
-    var daysSincePrepStart = daydiff(new Date(lastLibPrepStart), cmpDate);
     
     // put into "layer structure", sort & then add up y0's
     for (var projID in applBins["DNA"]) {
         var projArr = [];
         //for (c in cat) {
         for (i = 0; i < cat.length; i++) {
-            //var o = { x: cat[i], y: applBins[cat[i]][projID], pid: projID, queueDate: projects[projID]["queueDate"], arrivalDate: projects[projID]["arrivalDate"] };
-            var o = { x: cat[i], y: applBins[cat[i]][projID], pid: projID, queueDate: projects[projID]["queueDate"], arrivalDate: projects[projID]["arrivalDate"], passedTimeLimit: projects[projID]["passedTimeLimit"] };
+            var o = { x: cat[i], y: applBins[cat[i]][projID], pid: projID, queueDate: projects[projID]["queueDate"], arrivalDate: projects[projID]["arrivalDate"] };
             projArr.push(o);
         }
         dataArray.push(projArr);
@@ -791,8 +700,6 @@ function generateQueueSampleStackDataset(json, cmpDate, ptype) {
     // change to sort by application
     dataArray.sort(sortByApplication); // by application & queue date - arrival date - project ID
 
-    var firstInQueuePid = getFirstInQueue(dataArray);
-    //console.log("first in queue pid: " + firstInQueuePid);
 
     var tot = { DNA: 0, RNA: 0, SeqCap: 0, Other: 0};
     
@@ -801,16 +708,10 @@ function generateQueueSampleStackDataset(json, cmpDate, ptype) {
             var a = dataArray[i][j]["x"];
             dataArray[i][j]["y0"] = tot[a];
             tot[a] += dataArray[i][j]["y"];
-            //if (i == 0) { // add info about time since last libprep start for the project first in queue
-            if (dataArray[i][j]["pid"] == firstInQueuePid) { // add info about time since last libprep start for the project first in queue
-                dataArray[i][j]["lastLibPrep"] = lastLibPrepStart;
-                dataArray[i][j]["daysSincePrepStart"] = daysSincePrepStart;
-            }
         }
     }
     //console.log(dataArray);
         
-    //return pfBins;
     if (dataArray.length == 0 ) {
         dataArray = [
                         [
@@ -833,22 +734,14 @@ var sortCats = function (a, b) {
     order["12-24 w"] = 3;
     order["24-52 w"] = 4;
     order["Not closed"] = 5;
-    //if(order[a.value] < order[b.value]) {
-    //	return a;
-    //} else {
-    //	return b;
-    //}
     return order[a.key] - order[b.key];
 }
 
 function drawDelTimes(dataset) {
-    //var w = 300;
-    //var h = 180;
     var w = 350;
     var h = 200;
 
     var outerRadius = w / 2;
-    //var innerRadius = 0;
     var innerRadius = w / 10;
     var startA = - Math.PI/2;
     var endA = Math.PI/2
@@ -861,21 +754,18 @@ function drawDelTimes(dataset) {
                     return d.value;
                 })
                 .sort(null)
-                //.sort(sortCats) // don't sort here but in the dataset generation function
                 .startAngle(startA)
                 .endAngle(endA)
                 ;
     
     
-    //Easy colors accessible via a 10-step ordinal scale
+    //Easy colors accessible via a 20-step ordinal scale
     //var color = d3.scale.category10();
     var color = d3.scale.category20();
     //var color = d3.scale.category20b();
     //var color = d3.scale.category20c();
     
     //Create SVG element
-    //var svg = d3.select("body")
-    //var svg = d3.select("#delivery_times")
     var svg = d3.select("#delivery_times_plot")
                 .append("svg")
                 .attr("width", w)
@@ -903,53 +793,35 @@ function drawDelTimes(dataset) {
         })
         .attr("text-anchor", "middle")
         .text(function(d) {
-            //return d.value;
-            //return d.data.key + ": " + d.value;
             return d.data.key;
         });
 
     // Add a magnitude value to the larger arcs, translated to the arc centroid.
     arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; }).append("svg:text")
-      //.attr("dy", ".35em")
       .attr("dy", "1.1em")
       .attr("text-anchor", "middle")
-      //.attr("text-anchor", "start")
-      //.attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; })
       .attr("transform", function(d) { //set the label's origin to the center of the arc
         //we have to make sure to set these before calling arc.centroid
         d.outerRadius = outerRadius; // Set Outer Coordinate
         d.innerRadius = outerRadius/2; // Set Inner Coordinate
-        //return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
         return "translate(" + (arc.centroid(d)) + ")";
       })
       .style("fill", "White")
       .style("font", "bold 12px Arial")
       .text(function(d) { return "(" + d.data.value + ")"; });
-    //// Computes the angle of an arc, converting from radians to degrees.
-    //function angle(d) {
-    //  var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
-    //  return a > 90 ? a - 180 : a;
-    //}
-
 }
 
 function drawApplProj(dataset) {
-    //var w = 400;
     var w = 300;
     var h = 300;
-    //padding = 150;
     padding = w - 250;
     
         
-    //var outerRadius = w / 2;
     var outerRadius = (w - padding) / 2;
     var innerRadius = 0;
     var labelr = outerRadius + 10;
-    //var innerRadius = 50;
     var startA = 0;
     var endA = Math.PI * 2;
-    //var startA = - Math.PI/2;
-    //var endA = Math.PI/2;
     var arc = d3.svg.arc()
                     .innerRadius(innerRadius)
                     .outerRadius(outerRadius);
@@ -971,7 +843,6 @@ function drawApplProj(dataset) {
     //var color = d3.scale.category20c();
     
     //Create SVG element
-    //var svg = d3.select("body")
     var svg = d3.select("#application_projects")
                 .append("svg")
                 .attr("width", w)
@@ -984,7 +855,6 @@ function drawApplProj(dataset) {
                   .append("g")
                   .attr("class", "arc")
                   .attr("transform", "translate(" + w/2 + "," + (outerRadius + 20) + ")")
-                  //.attr("transform", "translate(" + 1.5*outerRadius + "," + 1.2*outerRadius + ")")
                   ;
     
     //Draw arc paths
@@ -995,50 +865,18 @@ function drawApplProj(dataset) {
         .attr("d", arc);
     
     ////Labels
-    ////arcs.append("text")
-    //arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; }).append("svg:text")
-    //    //.attr("transform", function(d) {
-    //    //	return "translate(" + (arc.centroid(d) + outerRadius) + ")";
-    //    //})					
-    //    .attr("transform", function(d) {
-    //        var c = arc.centroid(d),
-    //        x = c[0],
-    //        y = c[1],
-    //        // pythagorean theorem for hypotenuse
-    //        h = Math.sqrt(x*x + y*y);
-    //        return "translate(" + (x/h * labelr) +  ',' +
-    //        (y/h * labelr) +  ")"; 
-    //    })
-    //    //.attr("text-anchor", "middle")
-    //    //.attr("text-anchor", "start")
-    //    .attr("text-anchor", function(d) {
-    //        // are we past the center?
-    //        return (d.endAngle + d.startAngle)/2 > Math.PI ?
-    //            "end" : "start";
-    //    })
-    //    .attr("style", "fill: black")
-    //    .text(function(d) {
-    //        //return d.value;
-    //        //return d.data.key + ": " + d.value;
-    //        return d.data.key;
-    //    });
 
     arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; }).append("svg:text")
       .attr("dy", ".35em")
-      //.attr("dy", "1.1em")
       .attr("text-anchor", "middle")
-      //.attr("text-anchor", "start")
-      //.attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; })
       .attr("transform", function(d) { //set the label's origin to the center of the arc
         //we have to make sure to set these before calling arc.centroid
         d.outerRadius = outerRadius; // Set Outer Coordinate
         d.innerRadius = outerRadius/2; // Set Inner Coordinate
-        //return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
         return "translate(" + (arc.centroid(d)) + ")";
       })
       .style("fill", "White")
       .style("font", "bold 12px Arial")
-      //.style("font", "12px Arial")
       .text(function(d) { return d.data.value; });
 
 }
@@ -1049,15 +887,11 @@ function drawApplSample(dataset) {
     padding = w - 250;
     
          
-    //var outerRadius = w / 2;
     var outerRadius = (w - padding) / 2;
     var innerRadius = 0;
     var labelr = outerRadius + 10;
-    //var innerRadius = 50;
     var startA = 0;
     var endA = Math.PI * 2;
-    //var startA = - Math.PI/2;
-    //var endA = Math.PI/2;
     var arc = d3.svg.arc()
                     .innerRadius(innerRadius)
                     .outerRadius(outerRadius);
@@ -1079,7 +913,6 @@ function drawApplSample(dataset) {
     //var color = d3.scale.category20c();
 
     //Create SVG element
-    //var svg = d3.select("body")
     var svg = d3.select("#application_samples")
                 .append("svg")
                 .attr("width", w)
@@ -1091,8 +924,6 @@ function drawApplSample(dataset) {
                   .enter()
                   .append("g")
                   .attr("class", "arc")
-                  //.attr("transform", "translate(" + outerRadius + "," + outerRadius + ")")
-                  //.attr("transform", "translate(" + 1.5*outerRadius + "," + 1.2*outerRadius + ")")
                   .attr("transform", "translate(" + w/3 + "," + (outerRadius + 20) + ")")
                   ;
     
@@ -1104,51 +935,18 @@ function drawApplSample(dataset) {
         .attr("d", arc);
     
     ////Labels
-    ////arcs.append("text")
-    //arcs.filter(function(d) { return d.endAngle - d.startAngle > .15; }).append("svg:text")
-    //    //.attr("transform", function(d) {
-    //    //	return "translate(" + (arc.centroid(d) + outerRadius) + ")";
-    //    //})					
-    //    .attr("transform", function(d) {
-    //        var c = arc.centroid(d),
-    //        x = c[0],
-    //        y = c[1],
-    //        // pythagorean theorem for hypotenuse
-    //        h = Math.sqrt(x*x + y*y);
-    //        return "translate(" + (x/h * labelr) +  ',' +
-    //        (y/h * labelr) +  ")"; 
-    //    })
-    //    //.attr("text-anchor", "middle")
-    //    //.attr("text-anchor", "start")
-    //    .attr("text-anchor", function(d) {
-    //        // are we past the center?
-    //        return (d.endAngle + d.startAngle)/2 > Math.PI ?
-    //            "end" : "start";
-    //    })
-    //    .attr("style", "fill: black")
-    //    .text(function(d) {
-    //        //return d.value;
-    //        //return d.data.key + ": " + d.value;
-    //        return d.data.key;
-    //    });
 
     arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; }).append("svg:text")
       .attr("dy", ".35em")
-      //.attr("dy", "1.1em")
       .attr("text-anchor", "middle")
-      //.attr("text-anchor", "start")
-      //.attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; })
       .attr("transform", function(d) { //set the label's origin to the center of the arc
         //we have to make sure to set these before calling arc.centroid
         d.outerRadius = outerRadius; // Set Outer Coordinate
-        //d.innerRadius = outerRadius/2; // Set Inner Coordinate
         d.innerRadius = outerRadius/3; // Set Inner Coordinate
-        //return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
         return "translate(" + (arc.centroid(d)) + ")";
       })
       .style("fill", "White")
       .style("font", "bold 12px Arial")
-      //.style("font", "12px Arial")
       .text(function(d) { return d.data.value; });
 
     //Legend
@@ -1156,7 +954,6 @@ function drawApplSample(dataset) {
     
     var legend = svg.append("g")
       .attr("class", "legend")
-      //.attr("x", w - 165)
       .attr("x", legendXOffset)
       .attr("y", 25)
       .attr("height", 100)
@@ -1166,14 +963,11 @@ function drawApplSample(dataset) {
       .data(pie(dataset))
       .enter()
       .append("rect")
-	  //.attr("x", w - 165)
 	  .attr("x", legendXOffset)
       .attr("y", function(d, i){ return i *  20;})
 	  .attr("width", 10)
 	  .attr("height", 10)
 	  .style("fill", function(d, i) { 
-        //var color = color_hash[dataset.indexOf(d)][1];
-        //return color;
         return color(i);
       })
       
@@ -1181,12 +975,10 @@ function drawApplSample(dataset) {
       .data(pie(dataset))
       .enter()
       .append("text")
-	  //.attr("x", w - 152)
 	  .attr("x", legendXOffset + 13)
       .attr("y", function(d, i){ return i *  20 + 9;})
       .attr("style", "fill: black")
 	  .text(function(d) {
-        //var text = color_hash[dataset.indexOf(d)][0];
         var text = d.data.key;
         return text;
       });
@@ -1194,8 +986,6 @@ function drawApplSample(dataset) {
 }
 function drawReads(values, divID) {
     var margin = {top: 10, right: 30, bottom: 30, left: 10},
-        //width = 960 - margin.left - margin.right,
-        //height = 500 - margin.top - margin.bottom
         width = 320 - margin.left - margin.right,
         height = 180 - margin.top - margin.bottom
         ;
@@ -1208,17 +998,11 @@ function drawReads(values, divID) {
     //console.log("min - 10e6: " + (min - 10000000));
     
     var x = d3.scale.linear()
-        //.domain([0, 1])
-        //.domain([0, 3e8])
-        //.domain([0, (max + 30e6)])
-        //.domain([0, (max + 10)])
-        //.domain([(min - 20), (max + 20)])
         .domain([(min - domainPadding), (max + domainPadding)])
         .range([0, width]);
     
-    // Generate a histogram using twenty uniformly-spaced bins.
+    // Generate a histogram using fourteen uniformly-spaced bins.
     var data = d3.layout.histogram()
-        //.bins(x.ticks(20))
         .bins(x.ticks(14))
         (values);
     //console.log(data);
@@ -1231,8 +1015,6 @@ function drawReads(values, divID) {
         .scale(x)
         .orient("bottom");
     
-    //var svg = d3.select("body").append("svg")
-    //var svg = d3.select("#reads_per_lane").append("svg")
     var svg = d3.select("#" + divID).append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -1248,8 +1030,6 @@ function drawReads(values, divID) {
     var barWidth = (width - data.length) / (data.length + 2); // a bit ugly. divide the plot width (minus some space per bar)/with the number of bars + 1
     bar.append("rect")
         .attr("x", 1)
-        //.attr("width", x(data[0].dx) - 1)
-        //.attr("width", x(data[0].x  + data[0].dx) - 4)
         .attr("width", barWidth)
         .attr("height", function(d) { return height - y(d.y); });
     
@@ -1266,16 +1046,13 @@ function drawReads(values, divID) {
         .call(xAxis);
 
     svg.append("text")
-        //.attr("transform", "rotate(-90)")
         .attr("y", height +  margin.bottom - 2)
         .attr("x", width)
         .attr("class", "axis_label")
         .text("read pairs (millions)");
     // x axis label
     svg.append("text")
-        //.attr("transform", "rotate(-90)")
         .attr("y", margin.top)
-        //.attr("x", margin.left)
         .attr("x", margin.left + 20)
         .attr("text-anchor", "start")
         .attr("class", "axis_label")
@@ -1285,21 +1062,16 @@ function drawReads(values, divID) {
 
 function drawAffiliationProj(dataset, divID) {
     var w = 450;
-    //var w = 300;
     var h = 380;
-    //padding = 150;
     padding = w - 250;
     
         
-    //var outerRadius = w / 2;
     var outerRadius = (w - padding) / 2;
     var innerRadius = 0;
     var labelr = outerRadius + 10;
-    //var innerRadius = 50;
     var startA = 0;
     var endA = Math.PI * 2;
-    //var startA = - Math.PI/2;
-    //var endA = Math.PI/2;
+    
     var arc = d3.svg.arc()
                     .innerRadius(innerRadius)
                     .outerRadius(outerRadius);
@@ -1321,8 +1093,6 @@ function drawAffiliationProj(dataset, divID) {
     var color = d3.scale.category20c();
     
     //Create SVG element
-    //var svg = d3.select("body")
-    //var svg = d3.select("#application_projects")
     var svg = d3.select("#" + divID)
                 .append("svg")
                 .attr("width", w)
@@ -1334,7 +1104,6 @@ function drawAffiliationProj(dataset, divID) {
                   .enter()
                   .append("g")
                   .attr("class", "arc")
-                  //.attr("transform", "translate(" + w/2 + "," + (outerRadius + 20) + ")")
                   .attr("transform", "translate(" + w/3.5 + "," + (outerRadius + 20) + ")")
                   ;
     
@@ -1346,51 +1115,18 @@ function drawAffiliationProj(dataset, divID) {
         .attr("d", arc);
     
     ////Labels
-    //arcs.append("text")
-    ////arcs.filter(function(d) { return d.endAngle - d.startAngle > .2; }).append("svg:text")
-    //    //.attr("transform", function(d) {
-    //    //	return "translate(" + (arc.centroid(d) + outerRadius) + ")";
-    //    //})					
-    //    .attr("transform", function(d) {
-    //        var c = arc.centroid(d),
-    //        x = c[0],
-    //        y = c[1],
-    //        // pythagorean theorem for hypotenuse
-    //        h = Math.sqrt(x*x + y*y);
-    //        return "translate(" + (x/h * labelr) +  ',' +
-    //        (y/h * labelr) +  ")"; 
-    //    })
-    //    //.attr("text-anchor", "middle")
-    //    //.attr("text-anchor", "start")
-    //    .attr("text-anchor", function(d) {
-    //        // are we past the center?
-    //        return (d.endAngle + d.startAngle)/2 > Math.PI ?
-    //            "end" : "start";
-    //    })
-    //    .attr("style", "fill: black")
-    //    .text(function(d) {
-    //        //return d.value;
-    //        //return d.data.key + ": " + d.value;
-    //        return d.data.key;
-    //    });
 
-    //arcs.append("text")
     arcs.filter(function(d) { return d.endAngle - d.startAngle > .15; }).append("svg:text")
       .attr("dy", ".35em")
-      //.attr("dy", "1.1em")
       .attr("text-anchor", "middle")
-      //.attr("text-anchor", "start")
-      //.attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; })
       .attr("transform", function(d) { //set the label's origin to the center of the arc
         //we have to make sure to set these before calling arc.centroid
         d.outerRadius = outerRadius; // Set Outer Coordinate
         d.innerRadius = outerRadius/2; // Set Inner Coordinate
-        //return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")";
         return "translate(" + (arc.centroid(d)) + ")";
       })
       .style("fill", "White")
       .style("font", "bold 12px Arial")
-      //.style("font", "12px Arial")
       .text(function(d) { return d.data.value; });
 
     //Legend
@@ -1398,7 +1134,6 @@ function drawAffiliationProj(dataset, divID) {
     
     var legend = svg.append("g")
       .attr("class", "legend")
-      //.attr("x", w - 165)
       .attr("x", legendXOffset)
       .attr("y", 25)
       .attr("height", 100)
@@ -1408,14 +1143,11 @@ function drawAffiliationProj(dataset, divID) {
       .data(pie(dataset))
       .enter()
       .append("rect")
-	  //.attr("x", w - 165)
 	  .attr("x", legendXOffset)
       .attr("y", function(d, i){ return i *  20;})
 	  .attr("width", 10)
 	  .attr("height", 10)
 	  .style("fill", function(d, i) { 
-        //var color = color_hash[dataset.indexOf(d)][1];
-        //return color;
         return color(i);
       })
       
@@ -1423,17 +1155,13 @@ function drawAffiliationProj(dataset, divID) {
       .data(pie(dataset))
       .enter()
       .append("text")
-	  //.attr("x", w - 152)
 	  .attr("x", legendXOffset + 13)
       .attr("y", function(d, i){ return i *  20 + 9;})
       .attr("style", "fill: black")
 	  .text(function(d) {
-        //var text = color_hash[dataset.indexOf(d)][0];
         var text = d.data.key;
         return text;
       });
-
-
 }
 
 /**
@@ -1457,9 +1185,6 @@ function drawStackedBars (dataset, divID, width, height, unit, showFirstInQueue,
         parse = d3.time.format("%m/%Y").parse,
         format = d3.time.format("%b");
     
-    // Time limit colours
-    var limitCol1 = "#FFC447";
-    var limitCol2 = "#FD464B";
 
     
     if (unit == undefined) { unit = "lanes"}
@@ -1480,29 +1205,7 @@ function drawStackedBars (dataset, divID, width, height, unit, showFirstInQueue,
     tooltipHeight = parseInt(tooltipHeight.substring(0, tooltipHeight.length - 2));
     var tooltipRowHeight = "13"; // 13px per row
     var tooltipNewHeight = tooltipHeight - tooltipRowHeight;
-    
-    
-    
-    /*
-     * Not really using these colour schemes at the moment
-     * Will leave the code in for my bad old memory, if they are to be
-     * used later on
-     */    
-    // color scales
-    // use colorbrewer color schemes
-    // number of colors to use. NB! not all schemes have the same number of colors, see colorbrewer.js
-    // Also, see colorbrewer2.org
-    //var num_colors = 11; // also used in svg color code functions below
-    //var color_scheme = colorbrewer.RdYlGn[num_colors]; // array of colors defined in colorbrewer.js
-    var num_colors = 3; // also used in svg color code functions below
-    var color_scheme = colorbrewer.Blues[num_colors]; // array of colors defined in colorbrewer.js
-    //var num_colors = 20; // also used in svg color code functions below
-    //var color_scheme = d3.scale.category20c(); // array of colors defined in d3.js
-       
-    //z = d3.scale.ordinal().range(["lightpink", "darkgray", "lightblue"]);
-    //var z = d3.scale.ordinal().range(colorbrewer.PuBu[3]);
-    var z = d3.scale.ordinal().range(color_scheme); // this takes an array of colors as argument
-    
+        
     var svg = d3.select("#" + divID).append("svg:svg")
         .attr("width", w)
         .attr("height", h)
@@ -1530,52 +1233,15 @@ function drawStackedBars (dataset, divID, width, height, unit, showFirstInQueue,
         } else if (yMultiples > 2) {
             loadCol = "red";
         }
-        
-        
-        
-        
-        
-        //var stackMax;
-        //if (maxY) {
-        //    stackMax = maxY;
-        //} else {
-        //    stackMax = d3.max(dataset[dataset.length - 1], function(d) { return d.y0 + d.y; });        
-        //}             
-        //console.log("stackMax: ", stackMax);
-        //y.domain([0, stackMax]);
     
         // Add a group for each project.
         var project = svg.selectAll("g.project")
-            //.data(projLayers)
             .data(dataset)
             .enter().append("svg:g")
             .attr("class", "project")
             .style("fill", function(d, i) {
                 var col = d3.rgb("#5B87FF");
-                if(i%2 == 0) { col = col.brighter(); } // #82c0ff - spell out instead?
-                
-                //// set color dep on wait time since queue date
-                //if (d[0].passedTimeLimit != undefined && d[0].passedTimeLimit > 0) {
-                //    if (d[0].passedTimeLimit == 1) {
-                //        col = limitCol1;
-                //    } else {
-                //        col = limitCol2;
-                //    }
-                //}
-                
-                //// Handle vis que regarding time since last prep start for first in queue project
-                //var dayLimit = 7;
-                //if (showFirstInQueue) {
-                //    if (d[0].daysSincePrepStart != undefined) {
-                //        //if (d[0].daysSincePrepStart > dayLimit ) {
-                //        //    col = timeseriesColors[1];
-                //        //} else {
-                //        //    col = timeseriesColors[2];
-                //        //}
-                //        //col = "green";
-                //        col = timeseriesColors[2];
-                //     }
-                //} 
+                if(i%2 == 0) { col = col.brighter(); } // #82c0ff - spell out instead?                
                 return col;
 
             }) 
@@ -1601,8 +1267,7 @@ function drawStackedBars (dataset, divID, width, height, unit, showFirstInQueue,
                 tooltipDiv.transition()		
                     .duration(200)		
                     .style("opacity", .9);		
-                tooltipDiv.html(parseFloat(d.y).toFixed(fixedDigits) + " " + unit
-                                )	
+                tooltipDiv.html(parseFloat(d.y).toFixed(fixedDigits) + " " + unit)	
                     .style("left", (d3.event.pageX) + "px")		
                     .style("top", (d3.event.pageY - 28) + "px")
                     .style("height", (tooltipNewHeight + "px"))
@@ -1618,11 +1283,6 @@ function drawStackedBars (dataset, divID, width, height, unit, showFirstInQueue,
                 .style("width", (tooltipWidth + "px"))
                 ;
             })
-            //.on("click", function(d) {
-            //         var projID = d.pid;
-            //         var url = "https://genomics-status.scilifelab.se/project/" + projID;
-            //         window.open(url, "genomics-status");
-            //})
             ;
         
         // Add a label per category.
@@ -1649,7 +1309,6 @@ function drawStackedBars (dataset, divID, width, height, unit, showFirstInQueue,
             .attr("x", function(d) { return x(d) + x.rangeBand() / 2; })
            .attr("y", function(d) { return -y(totals[d]) - 5; })
             .attr("text-anchor", "middle")
-            //.attr("dy", ".71em")
             .text(function(d) {
                 if (num_projects[d] == 0) {
                     return "";
@@ -1667,12 +1326,8 @@ function drawStackedBars (dataset, divID, width, height, unit, showFirstInQueue,
                 .enter().append("svg:text")
                 .attr("class", ".load_label")
                 .attr("x", function(d) { return x(d) + x.rangeBand() / 2; })
-                //.attr("y", function(d) { return -y(d.y0) - 10; })
-                //.attr("y", function(d) { return -100; })
                 .attr("y", function(d) { return -y(totals[d]) - 15; })
                 .attr("text-anchor", "middle")
-                //.attr("dy", ".71em")
-                //.text(function(d) { return d; })
                 .text(function(d) {
                     if (num_units[d] == 0) {
                         return "";
@@ -1696,12 +1351,10 @@ function drawStackedBars (dataset, divID, width, height, unit, showFirstInQueue,
         // horizontal lines. Add?
         rule.append("svg:line")
             .attr("x2", w - p[1] - p[3] + 10)
-            //.style("stroke", function(d) { return d ? "#000" : "#fff"; })
             .style("stroke", function(d) { return "#000"; })
             .style("stroke-opacity", function(d) { return d ? 0.1 : 0.6; }); // base line should be more visible
         
         rule.append("svg:text")
-            //.attr("x", w - p[1] - p[3] + 6)
             .attr("text-anchor", "end")
             .attr("x", -p[3] + 18)
             .attr("dy", ".35em")

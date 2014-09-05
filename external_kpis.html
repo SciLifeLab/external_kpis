@@ -3,9 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>NGI Stockholm status</title>
-		<!--<script type="text/javascript" src="../d3/d3.v3.js"></script>-->
 		<script type="text/javascript" src="d3/d3.v3.js"></script>
-		<script type="text/javascript" src="d3/colorbrewer.js"></script>
 		<script type="text/javascript" src="external_kpis.js"></script>
         <link rel="stylesheet" type="text/css" href="external_kpis.css">
 		
@@ -85,22 +83,16 @@
 		
 		<script type="text/javascript">
             var today = new Date(); // today
-			//var twelveWeeks = new Date( today.getTime() - 12 * 7 * 1000*60*60*24);
 			var oneYear = new Date( today.getTime() - 365 * 1000*60*60*24);
 			var firstJuly = new Date("2013-07-01");
 			var startDate = oneYear;
 			if(startDate < firstJuly) { startDate = firstJuly; }
 
-            //var dateStr = startDate.getFullYear() + "-" + today.getMonth() + "-" + today.getDate();    
             startDateFormat = d3.time.format("%e %B, %Y");
-			//var dateStr = startDate.toDateString();    
 			var dateStr = startDateFormat(startDate);    
 			d3.select("#date")
                 .text(dateStr);
 			
-			//var delTimeUrl ="testdata.json";
-			//var url = "http://localhost:8888/dev/external_kpis/getCouchDbData.php?view=projects?group_level=1";
-			//var delTimeUrl ="getCouchDbData.php?db=projects&design=kpi_external&view=projects&group_level=1";
 			var delTimeUrl ="getCouchDbData.php?db=projects&design=kpi_external&view=projects&reduce=false";
 			d3.json(delTimeUrl, function(json) {
 				var dataset = makeDeltimeDataset(json, startDate);
@@ -108,34 +100,25 @@
 				drawDelTimes(dataset);
 				
 			});
-			//var delTimeUrlNew ="getCouchDbData.php?db=projects&design=kpi_external&view=projects&reduce=false";
-			//d3.json(delTimeUrlNew, function(json) {
-			//	var newDataset = makeDeltimeDataset2(json, startDate); // testing
-			//	console.log(newDataset);
-			//	//drawDelTimes(newDataset);
-			//	
-			//});
 
 			var applProjUrl = "getCouchDbData.php?db=projects&design=kpi_external&view=applications_projects&reduce=false";
 			d3.json(applProjUrl, function(json) {
-				//var dataset = json.rows;
 				var dataset = makeApplProjDataset(json, startDate);
 				//console.log(dataset);
 				drawApplProj(dataset);
 				
 			});
+
 			var applSampleUrl = "getCouchDbData.php?db=projects&design=kpi_external&view=applications_samples&reduce=false";
 			d3.json(applSampleUrl, function(json) {
-				//var dataset = json.rows;
 				var dataset = makeApplSampleDataset(json, startDate);
 				//console.log(dataset);
 				drawApplSample(dataset);
 				
 			});
-			//var readsUrl ="testdata_histo.json";
+
 			var readsUrl = "getCouchDbData.php?db=flowcells&design=reads&view=per_lane&reduce=false";
 			d3.json(readsUrl, function(json) {
-				//var data = makeReadsDataset(json);
 				var hoData = makeReadsDataset(json, startDate, "HighOutput");
 				var rapidData = makeReadsDataset(json, startDate, "RapidRun");
 				var miseqData = makeReadsDataset(json, startDate, "MiSeq");

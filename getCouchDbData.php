@@ -1,9 +1,7 @@
 <?php
-    //$viewStr = "KPI_applications";
     $viewStr = "";
     $designStr = "";
     $dbStr = "";
-    //$levelStr = "";
     
     //$group_levelStr = "group_level=2";
     if (isset($_GET['view'])) {
@@ -38,8 +36,6 @@
     }
     
 
-    //$url = "http://localhost:5984/analysis/_design/process_flow/_view/KPI?group_level=2";
-    //$url = "http://tools.scilifelab.se:5984/analysis/_design/process_flow/_view/KPI?group_level=2";
     
     // get user:password from file. File should contain one line on the form username:password
     $fhandle = fopen("user_cred.txt", 'r');
@@ -50,7 +46,6 @@
 
     $base_url = "http://$user_password@tools.scilifelab.se:5984";
     //$base_url = "http://localhost:5984";
-    ////"projects/_design/kpi_external/_view/";
 
     $url = "$base_url/$dbStr/_design/$designStr/_view/$viewStr";
     if(isset($reduceStr)) {
