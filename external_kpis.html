@@ -3,14 +3,61 @@
 	<head>
 		<meta charset="utf-8">
 		<title>NGI Stockholm status</title>
-		<script type="text/javascript" src="../d3/d3.v3.js"></script>
+		<script type="text/javascript" src="d3/d3.v3.js"></script>
 		<script type="text/javascript" src="external_kpis.js"></script>
         <link rel="stylesheet" type="text/css" href="external_kpis.css">
 		
 	</head>
 	<body>
+        <!--Empty invisible tooltip div-->
+        <div class="tooltip" style="opacity: 0"></div>
+
 		<h1>NGI Stockholm status</h1>
 		<p id="date_info"><em>Data generated for projects started since <span id="date"></span></em></p>
+
+		<div id="queue">
+			<h2 style="margin-bottom: 3px">Current Queue - projects waiting to be processed after passing reception control</h2>
+			<div id="load_charts">
+				<div id="queue_lp_load">
+					<h3 style="float: left; margin: 5px 0 0 0">Library prep projects</h3>
+
+					<br class="clear">
+					
+					<div id="queue_sample_load_lp">
+						<h4 style="float: left">Total no. of samples per application category</h4>
+						<br class="clear">
+					</div>
+					<div id="queue_lane_load_lp">
+						<h4>Total no. of lanes per seq platform</h4>
+					</div>
+					<br class="clear">
+					<div id="explanation_lp">
+						<em>Queue time is dependent on the number of "worksets". A workset is a batch of samples processed by a particular library preparation method, typically 96 samples. On average, 2 worksets are started each week. Application categories are: <strong>DNA</strong> - Amplicon, de novo, Metagenome, and WG re-seq; <strong>RNA</strong> - RNA-seq (total RNA); <strong>SeqCap</strong> - Sequence capture; <strong>Other</strong> - any other applications</em>
+						<br>
+						<em>No. of lanes indicates the number of lanes these samples will occupy on the sequencing instruments once library preparation is done</em>
+					</div>
+						
+				</div>
+				<div id="queue_fl_load">
+					<h3 style="margin: 5px 0 0 0">Finished library projects</h3>
+					<div id="queue_lane_load_fl">
+						<h4>Lanes</h4>            
+					</div>
+					<br class="clear">
+					<div id="explanation_fl" style="margin-bottom: 26px"> <!--To make the bottom line up with the panel on the left that has more text-->
+						<em>Queue time is dependent on the number of available lanes. Average no. of lanes started/week is 32, but that includes library prep projects as well.</em>
+					</div>
+				</div>
+				
+			</div>
+		</div>
+		
+		<div id="delivery_times">
+			<h2>Delivery times (closed projects)</h2>
+			<div id="delivery_times_plot"></div>
+		</div>
+		<br class="clear">
+		
 		<div id="affiliations">
 			<h2>Affiliations (# projects)</h2>
 		</div>
@@ -21,12 +68,8 @@
 			<h2>Applications (# samples)</h2>			
 		</div>
 		<br class="clear">
-		<div id="delivery_times">
-			<h2>Delivery times (closed projects)</h2>
-		</div>
-		<br class="clear">
 		<div id="reads_per_lane">
-			<h2>Reads / lane</h2>
+			<h2 style="text-align: left">Reads / lane</h2>
 			<div id="ho_reads_per_lane" class="reads_per_lane">
 				<h3>HiSeq High Output</h3>			
 			</div>
@@ -40,22 +83,16 @@
 		
 		<script type="text/javascript">
             var today = new Date(); // today
-			//var twelveWeeks = new Date( today.getTime() - 12 * 7 * 1000*60*60*24);
 			var oneYear = new Date( today.getTime() - 365 * 1000*60*60*24);
 			var firstJuly = new Date("2013-07-01");
 			var startDate = oneYear;
 			if(startDate < firstJuly) { startDate = firstJuly; }
 
-            //var dateStr = startDate.getFullYear() + "-" + today.getMonth() + "-" + today.getDate();    
             startDateFormat = d3.time.format("%e %B, %Y");
-			//var dateStr = startDate.toDateString();    
 			var dateStr = startDateFormat(startDate);    
 			d3.select("#date")
                 .text(dateStr);
 			
-			//var delTimeUrl ="testdata.json";
-			//var url = "http://localhost:8888/dev/external_kpis/getCouchDbData.php?view=projects?group_level=1";
-			//var delTimeUrl ="getCouchDbData.php?db=projects&design=kpi_external&view=projects&group_level=1";
 			var delTimeUrl ="getCouchDbData.php?db=projects&design=kpi_external&view=projects&reduce=false";
 			d3.json(delTimeUrl, function(json) {
 				var dataset = makeDeltimeDataset(json, startDate);
@@ -63,34 +100,25 @@
 				drawDelTimes(dataset);
 				
 			});
-			//var delTimeUrlNew ="getCouchDbData.php?db=projects&design=kpi_external&view=projects&reduce=false";
-			//d3.json(delTimeUrlNew, function(json) {
-			//	var newDataset = makeDeltimeDataset2(json, startDate); // testing
-			//	console.log(newDataset);
-			//	//drawDelTimes(newDataset);
-			//	
-			//});
 
 			var applProjUrl = "getCouchDbData.php?db=projects&design=kpi_external&view=applications_projects&reduce=false";
 			d3.json(applProjUrl, function(json) {
-				//var dataset = json.rows;
 				var dataset = makeApplProjDataset(json, startDate);
 				//console.log(dataset);
 				drawApplProj(dataset);
 				
 			});
+
 			var applSampleUrl = "getCouchDbData.php?db=projects&design=kpi_external&view=applications_samples&reduce=false";
 			d3.json(applSampleUrl, function(json) {
-				//var dataset = json.rows;
 				var dataset = makeApplSampleDataset(json, startDate);
 				//console.log(dataset);
 				drawApplSample(dataset);
 				
 			});
-			//var readsUrl ="testdata_histo.json";
+
 			var readsUrl = "getCouchDbData.php?db=flowcells&design=reads&view=per_lane&reduce=false";
 			d3.json(readsUrl, function(json) {
-				//var data = makeReadsDataset(json);
 				var hoData = makeReadsDataset(json, startDate, "HighOutput");
 				var rapidData = makeReadsDataset(json, startDate, "RapidRun");
 				var miseqData = makeReadsDataset(json, startDate, "MiSeq");
@@ -106,6 +134,30 @@
 				//console.log(dataset);
 				//console.log(newDataset);
 				drawAffiliationProj(dataset, "affiliations");
+				
+			});
+			
+			// Queue vizualisation
+			var queueUrl = "getCouchDbData.php?db=projects&design=genomics-dashboard&view=dates_and_load_per_sample&reduce=false";
+			d3.json(queueUrl, function(sample_json) {
+			    //Generate data sets
+				var sampleQueue = generateQueueSampleStackDataset(sample_json, today);
+				var libprepLaneQueue = generateQueueLaneLPStackDataset(sample_json, today);
+				var finlibLaneQueue = generateQueueLaneFLStackDataset(sample_json, today);
+		        
+				//Set the 'normal' max values for the different load visualizations
+				var queueLpSampleLoadNormalMax = 200; //# samples in queue for libprep
+				var queueLpLaneLoadNormalMax = 60; //# lanes worth of samples in queue for libprep
+				var queueFlLaneLoadNormalMax = 30; //# lanes of finished libraries in queue for sequencing
+				
+				var plot_width = 600;
+				var bar_width = plot_width / 8;
+				var panelHeights = 250;
+				drawStackedBars (sampleQueue, "queue_sample_load_lp", bar_width * 4, panelHeights, "samples", true, queueLpSampleLoadNormalMax, true);
+				drawStackedBars (libprepLaneQueue, "queue_lane_load_lp", bar_width * 2, panelHeights, "lanes", false, queueLpLaneLoadNormalMax, false);
+				drawStackedBars (finlibLaneQueue, "queue_lane_load_fl", bar_width * 2, panelHeights, "lanes", false, queueFlLaneLoadNormalMax, false);
+				
+				//console.log(sampleQueue);
 				
 			});
 			
