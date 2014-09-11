@@ -32,9 +32,15 @@
 					</div>
 					<br class="clear">
 					<div id="explanation_lp">
-						<em>Queue time is dependent on the number of "worksets". A workset is a batch of samples processed by a particular library preparation method, typically 96 samples. On average, 2 worksets are started each week. Application categories are: <strong>DNA</strong> - Amplicon, de novo, Metagenome, and WG re-seq; <strong>RNA</strong> - RNA-seq (total RNA); <strong>SeqCap</strong> - Sequence capture; <strong>Other</strong> - any other applications</em>
+						<em>Queue time is dependent on the number of "worksets". A workset is a batch of samples processed
+						by a particular library preparation method, typically 96 samples. On average, 2 worksets are
+						started each week. Application categories are: <strong>DNA</strong> - Amplicon, de novo,
+						Metagenome, and WG re-seq; <strong>RNA</strong> - RNA-seq (total RNA);
+						<strong>SeqCap</strong> - Sequence capture; <strong>Other</strong> - any other
+						applications</em>
 						<br>
-						<em>No. of lanes indicates the number of lanes these samples will occupy on the sequencing instruments once library preparation is done</em>
+						<em>No. of lanes indicates the number of lanes these samples will occupy on the sequencing
+						instruments once library preparation is done</em>
 					</div>
 						
 				</div>
@@ -45,7 +51,8 @@
 					</div>
 					<br class="clear">
 					<div id="explanation_fl" style="margin-bottom: 26px"> <!--To make the bottom line up with the panel on the left that has more text-->
-						<em>Queue time is dependent on the number of available lanes. Average no. of lanes started/week is 32, but that includes library prep projects as well.</em>
+						<em>Queue time is dependent on the number of available lanes. Average no. of lanes started/week
+							is 32, but that includes library prep projects as well.</em>
 					</div>
 				</div>
 				
@@ -71,7 +78,10 @@
 		<div id="reads_per_lane">
 			<h2 style="text-align: left">Reads / lane</h2>
 			<div id="ho_reads_per_lane" class="reads_per_lane">
-				<h3>HiSeq High Output</h3>			
+				<h3>HiSeq High Output v3</h3>			
+			</div>
+			<div id="hov4_reads_per_lane" class="reads_per_lane">
+				<h3>HiSeq High Output v4</h3>			
 			</div>
 			<div id="rapid_reads_per_lane" class="reads_per_lane">
 				<h3>HiSeq Rapid</h3>			
@@ -120,10 +130,12 @@
 			var readsUrl = "getCouchDbData.php?db=flowcells&design=reads&view=per_lane&reduce=false";
 			d3.json(readsUrl, function(json) {
 				var hoData = makeReadsDataset(json, startDate, "HighOutput");
+				var hov4Data = makeReadsDataset(json, startDate, "RapidHighOutput");
 				var rapidData = makeReadsDataset(json, startDate, "RapidRun");
 				var miseqData = makeReadsDataset(json, startDate, "MiSeq");
 				//console.log(dataset);
 				drawReads(hoData, "ho_reads_per_lane");
+				drawReads(hov4Data, "hov4_reads_per_lane");
 				drawReads(rapidData, "rapid_reads_per_lane");
 				drawReads(miseqData, "miseq_reads_per_lane");				
 			});
