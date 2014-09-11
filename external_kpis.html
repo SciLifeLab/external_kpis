@@ -80,6 +80,9 @@
 			<div id="ho_reads_per_lane" class="reads_per_lane">
 				<h3>HiSeq High Output v3</h3>			
 			</div>
+			<div id="hov4_reads_per_lane" class="reads_per_lane">
+				<h3>HiSeq High Output v4</h3>			
+			</div>
 			<div id="rapid_reads_per_lane" class="reads_per_lane">
 				<h3>HiSeq Rapid</h3>			
 			</div>
@@ -127,10 +130,12 @@
 			var readsUrl = "getCouchDbData.php?db=flowcells&design=reads&view=per_lane&reduce=false";
 			d3.json(readsUrl, function(json) {
 				var hoData = makeReadsDataset(json, startDate, "HighOutput");
+				var hov4Data = makeReadsDataset(json, startDate, "RapidHighOutput");
 				var rapidData = makeReadsDataset(json, startDate, "RapidRun");
 				var miseqData = makeReadsDataset(json, startDate, "MiSeq");
 				//console.log(dataset);
 				drawReads(hoData, "ho_reads_per_lane");
+				drawReads(hov4Data, "hov4_reads_per_lane");
 				drawReads(rapidData, "rapid_reads_per_lane");
 				drawReads(miseqData, "miseq_reads_per_lane");				
 			});
