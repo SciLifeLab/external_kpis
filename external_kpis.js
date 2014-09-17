@@ -23,6 +23,7 @@ var organisationNames = {
 var applicationNames = {
     "WG re-seq": "Whole genome re-seq",
     "de novo": "de novo seq",    
+    "WG re-seq (IGN)": "Whole genome re-seq (hum)",
 }
 
 
@@ -157,6 +158,12 @@ function totalY(dataset, domain) {
     return tot;
 }
 
+/**
+ * Creates data set with project counts per time bin since a specified start date
+ * @param {Object} json		A parsed json stream
+ * @param {Date} startDate    A Date object to specify start of date range to include
+ * @returns {Object}    An object with project counts per time bin
+ */
 function makeDeltimeDataset(json, startDate) {
     var data = [];
     var rows = json["rows"];
@@ -196,6 +203,14 @@ function makeDeltimeDataset(json, startDate) {
     
     return data.sort(sortCats);
 }
+
+
+/**
+ * Creates data set with project counts per application since a specified start date
+ * @param {Object} json		A parsed json stream
+ * @param {Date} startDate    A Date object to specify start of date range to include
+ * @returns {Object}    An object with project counts per application
+ */
 function makeApplProjDataset(json, startDate) {
     var data = [];
     var rows = json["rows"];
@@ -230,6 +245,13 @@ function makeApplProjDataset(json, startDate) {
     return data;
 }
 
+/**
+ * Creates data set with sample counts per application since a specified start date
+ * @param {Object} json		A parsed json stream
+ * @param {Date} startDate    A Date object to specify start of date range to include
+ * @param {boolean} includeFinishedLibrary    Whether Finished Library projects should be included or not
+ * @returns {Object}    An object with sample counts per application
+ */
 function makeApplSampleDataset(json, startDate, includeFinishedLibrary) {
     var data = [];
     var rows = json["rows"];
