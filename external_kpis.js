@@ -230,7 +230,7 @@ function makeApplProjDataset(json, startDate) {
     return data;
 }
 
-function makeApplSampleDataset(json, startDate) {
+function makeApplSampleDataset(json, startDate, includeFinishedLibrary) {
     var data = [];
     var rows = json["rows"];
     //console.log(rows);
@@ -246,6 +246,9 @@ function makeApplSampleDataset(json, startDate) {
         var application = rows[i]["key"];
         // Check lookup table if there is a longer name
         if(applicationNames[application]) { application = applicationNames[application]; }
+        if (!includeFinishedLibrary && application == "Finished library") {
+            continue;
+        }
         var v = rows[i]["value"];
         var od = v[1];
         var samples = v[0];

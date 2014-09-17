@@ -121,7 +121,7 @@
 
 			var applSampleUrl = "getCouchDbData.php?db=projects&design=kpi_external&view=applications_samples&reduce=false";
 			d3.json(applSampleUrl, function(json) {
-				var dataset = makeApplSampleDataset(json, startDate);
+				var dataset = makeApplSampleDataset(json, startDate, false); // exclude Finished library samples
 				//console.log(dataset);
 				drawApplSample(dataset);
 				
