@@ -268,9 +268,6 @@ function makeApplSampleDataset(json, startDate, includeFinishedLibrary) {
         var application = rows[i]["key"];
         // Check lookup table if there is a longer name
         if(applicationNames[application]) { application = applicationNames[application]; }
-        if (!includeFinishedLibrary && application == "Finished library") {
-            continue;
-        }
         var v = rows[i]["value"];
         var od = v[1];
         var samples = v[0];
@@ -279,6 +276,11 @@ function makeApplSampleDataset(json, startDate, includeFinishedLibrary) {
             //console.log("skipping");
             continue;
         } //skip if queue date is before startDate
+
+        if (!includeFinishedLibrary && application == "Finished library") {
+            samples = 0; // set to a value to get Finished libraries as a category for the legend
+        }
+
         if(nums[application]) {
             nums[application] += samples;
         } else {
