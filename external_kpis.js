@@ -28,6 +28,52 @@ var applicationNames = {
 
 
 /* **** Helper functions **** */
+/**
+ * Sort function for d3.pie to sort Finished library bin last
+ * @param {Object} a		Application bin object
+ * @param {Object} b		Application bin object
+ * @returns {Number} A negative number if a should be sorted before b, a positive number if vice versa, otherwise 0 
+ */
+function sortFinLibLast(a, b) {
+    // Strangely, the order of Objects in the array in the d3.pie object will not change, only the
+    // location where the arc for Finished library will be drawn.
+    // That's why there is another sort function (sortPieDataFinLibLast) below to then be able
+    // to sort the transformed array of a d3.pie object so that the Finished library bin object
+    // comes last when we feed that to the pie and legend drawing code (to get the colours to be the same)
+    
+    if (a.key == "Finished library") {
+        return 1;
+    } else if (b.key == "Finished library") {
+        return -1;
+    }
+    if (a.key.toLowerCase() < b.key.toLowerCase()) {
+        return -1;
+    } else if (a.key.toLowerCase() > b.key.toLowerCase()) {
+        return 1;
+    }
+    return 0;
+}
+
+/**
+ * Sort function for d3.pie-transformed data array to sort Finished library bin Object last
+ * @param {Object} a		"d3.pie.arc" object
+ * @param {Object} b		"d3.pie.arc"  object
+ * @returns {Number} A negative number if a should be sorted before b, a positive number if vice versa, otherwise 0 
+ */
+function sortPieDataFinLibLast(a, b) {
+    // See comment above in sortFinLibLast function
+    if (a.data.key == "Finished library") {
+        return 1;
+    } else if (b.data.key == "Finished library") {
+        return -1;
+    }
+    if (a.data.key.toLowerCase() < b.data.key.toLowerCase()) {
+        return -1;
+    } else if (a.data.key.toLowerCase() > b.data.key.toLowerCase()) {
+        return 1;
+    }
+    return 0;
+}
 
 /**
  * Sort function for layer objects to sort by platform.<br>
@@ -239,7 +285,6 @@ function makeApplProjDataset(json, startDate) {
         }
     }
     for(application in nums) {
-        //if(application == "WG re-seq") { application = "Whole genome re-seq"; }
         data.push( {"key": application, "value": nums[application]} );
     }
     return data;
@@ -857,7 +902,8 @@ function drawApplProj(dataset) {
                 .value(function(d) {
                     return d.value;
                 })
-                .sort(null)
+                //.sort(null)
+                .sort(sortFinLibLast) // Sort the indata so that Finished library will be last
                 .startAngle(startA)
                 .endAngle(endA)
                 ;
@@ -865,9 +911,9 @@ function drawApplProj(dataset) {
     
     //Easy colors accessible via a 10-step ordinal scale
     //var color = d3.scale.category10();
-    var color = d3.scale.category20();
+    //var color = d3.scale.category20();
     //var color = d3.scale.category20b();
-    //var color = d3.scale.category20c();
+    var color = d3.scale.category20c();
     
     //Create SVG element
     var svg = d3.select("#application_projects")
@@ -877,7 +923,9 @@ function drawApplProj(dataset) {
     
     //Set up groups
     var arcs = svg.selectAll("g.arc")
-                  .data(pie(dataset))
+                  .data(pie(dataset).sort(sortPieDataFinLibLast)) // Sort the data so that Finished library
+                                                                  // will be last (see comment in sortFinLibLast
+                                                                  // and sortPieDataFinLibLast functions)
                   .enter()
                   .append("g")
                   .attr("class", "arc")
@@ -927,17 +975,17 @@ function drawApplSample(dataset) {
                 .value(function(d) {
                     return d.value;
                 })
-                .sort(null)
+                //.sort(null)
+                .sort(sortFinLibLast) // Sort the indata so that Finished library will be last
                 .startAngle(startA)
                 .endAngle(endA)
                 ;
-    
-    
+        
     //Easy colors accessible via a 10-step ordinal scale
     //var color = d3.scale.category10();
-    var color = d3.scale.category20();
+    //var color = d3.scale.category20();
     //var color = d3.scale.category20b();
-    //var color = d3.scale.category20c();
+    var color = d3.scale.category20c();
 
     //Create SVG element
     var svg = d3.select("#application_samples")
@@ -947,7 +995,10 @@ function drawApplSample(dataset) {
     
     //Set up groups
     var arcs = svg.selectAll("g.arc")
-                  .data(pie(dataset))
+                  .data(pie(dataset).sort(sortPieDataFinLibLast)) // Sort the data so that Finished library
+                                                                  // will be last (see comment in sortFinLibLast
+                                                                  // and sortPieDataFinLibLast functions)
+
                   .enter()
                   .append("g")
                   .attr("class", "arc")
@@ -987,7 +1038,7 @@ function drawApplSample(dataset) {
       .attr("width", 100);
 
     legend.selectAll('rect')
-      .data(pie(dataset))
+      .data(pie(dataset).sort(sortPieDataFinLibLast))
       .enter()
       .append("rect")
 	  .attr("x", legendXOffset)
@@ -999,7 +1050,7 @@ function drawApplSample(dataset) {
       })
       
     legend.selectAll('text')
-      .data(pie(dataset))
+      .data(pie(dataset).sort(sortPieDataFinLibLast))
       .enter()
       .append("text")
 	  .attr("x", legendXOffset + 13)
