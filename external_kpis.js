@@ -28,6 +28,24 @@ var applicationNames = {
 
 
 /* **** Helper functions **** */
+
+/**
+ * Sort function for delivery time bins
+ * @param {Object} a		Time bin object
+ * @param {Object} b		Time bin object
+ * @returns {Number} A negative number if a should be sorted before b, a positive number if vice versa, otherwise 0 
+ */
+function sortCats(a, b) {
+    var order = [];
+    order["0-6 w"] = 1;
+    order["6-12 w"] = 2;
+    order["12-24 w"] = 3;
+    order["24-52 w"] = 4;
+    order["Not closed"] = 5;
+    return order[a.key] - order[b.key];
+}
+
+
 /**
  * Sort function for d3.pie to sort Finished library bin last
  * @param {Object} a		Application bin object
@@ -338,6 +356,13 @@ function makeApplSampleDataset(json, startDate, includeFinishedLibrary) {
     return data;
 }
 
+/**
+ * Creates data set with read(-pair) counts per lane since a specified start date and sequencing mode
+ * @param {Object} json		A parsed json stream
+ * @param {Date} startDate    A Date object to specify start of date range to include
+ * @param {string} filter    The sequencing mode for which data should be extracted
+ * @returns {Object}    An array of lane read(-pair) counts in millions
+ */
 function makeReadsDataset(json, startDate, filter) {
     var rows = json.rows;
     var values = [];
@@ -365,7 +390,12 @@ function makeReadsDataset(json, startDate, filter) {
     return values;
 }
 
-//makeAffiliationDataset(json, twelveWeeks)
+/**
+ * Creates data set with number of projects per organisation since a specified start date
+ * @param {Object} json		A parsed json stream
+ * @param {Date} startDate    A Date object to specify start of date range to include
+ * @returns {Array}    An array of organisation bin objects
+ */
 function makeAffiliationDataset(json, startDate) {
     var rows = json.rows;
     //console.log(rows);
@@ -797,17 +827,6 @@ function generateQueueSampleStackDataset(json, cmpDate, ptype) {
     return dataArray;
 }
 
-
-
-var sortCats = function (a, b) {
-    var order = [];
-    order["0-6 w"] = 1;
-    order["6-12 w"] = 2;
-    order["12-24 w"] = 3;
-    order["24-52 w"] = 4;
-    order["Not closed"] = 5;
-    return order[a.key] - order[b.key];
-}
 
 function drawDelTimes(dataset) {
     var w = 350;
