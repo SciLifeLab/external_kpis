@@ -828,6 +828,10 @@ function generateQueueSampleStackDataset(json, cmpDate, ptype) {
 }
 
 
+/**
+ * Draws a "half" pie chart of delivery time bins
+ * @param {Object} dataset  Parsed data
+ */
 function drawDelTimes(dataset) {
     var w = 350;
     var h = 200;
@@ -902,6 +906,10 @@ function drawDelTimes(dataset) {
       .text(function(d) { return "(" + d.data.value + ")"; });
 }
 
+/**
+ * Draws a pie chart of number of projects per application
+ * @param {Object} dataset  Parsed data
+ */
 function drawApplProj(dataset) {
     var w = 300;
     var h = 300;
@@ -975,6 +983,10 @@ function drawApplProj(dataset) {
 
 }
 
+/**
+ * Draws a pie chart of number of samples per application & a legend
+ * @param {Object} dataset  Parsed data
+ */
 function drawApplSample(dataset) {
     var w = 450;
     var h = 300;
@@ -1081,6 +1093,12 @@ function drawApplSample(dataset) {
       });
    
 }
+
+/**
+ * Draws a histogram of number of read-pairs per lane
+ * @param {Object} dataset  Parsed data
+ * @param {String} divID  Id of DOM div to where plot should reside
+ */
 function drawReads(values, divID) {
     var margin = {top: 10, right: 30, bottom: 30, left: 10},
         width = 320 - margin.left - margin.right,
@@ -1157,6 +1175,11 @@ function drawReads(values, divID) {
             
 }
 
+/**
+ * Draws a pie chart of number of projects per institutional affiliation & a legend
+ * @param {Object} dataset  Parsed data
+ * @param {String} divID  Id of DOM div to where plot should reside
+ */
 function drawAffiliationProj(dataset, divID) {
     var w = 450;
     var h = 380;
