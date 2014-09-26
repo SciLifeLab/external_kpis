@@ -23,10 +23,75 @@ var organisationNames = {
 var applicationNames = {
     "WG re-seq": "Whole genome re-seq",
     "de novo": "de novo seq",    
+    "WG re-seq (IGN)": "Whole genome re-seq (hum)",
 }
 
 
 /* **** Helper functions **** */
+
+/**
+ * Sort function for delivery time bins
+ * @param {Object} a		Time bin object
+ * @param {Object} b		Time bin object
+ * @returns {Number} A negative number if a should be sorted before b, a positive number if vice versa, otherwise 0 
+ */
+function sortCats(a, b) {
+    var order = [];
+    order["0-6 w"] = 1;
+    order["6-12 w"] = 2;
+    order["12-24 w"] = 3;
+    order["24-52 w"] = 4;
+    order["Not closed"] = 5;
+    return order[a.key] - order[b.key];
+}
+
+
+/**
+ * Sort function for d3.pie to sort Finished library bin last
+ * @param {Object} a		Application bin object
+ * @param {Object} b		Application bin object
+ * @returns {Number} A negative number if a should be sorted before b, a positive number if vice versa, otherwise 0 
+ */
+function sortFinLibLast(a, b) {
+    // Strangely, the order of Objects in the array in the d3.pie object will not change, only the
+    // location where the arc for Finished library will be drawn.
+    // That's why there is another sort function (sortPieDataFinLibLast) below to then be able
+    // to sort the transformed array of a d3.pie object so that the Finished library bin object
+    // comes last when we feed that to the pie and legend drawing code (to get the colours to be the same)
+    
+    if (a.key == "Finished library") {
+        return 1;
+    } else if (b.key == "Finished library") {
+        return -1;
+    }
+    if (a.key.toLowerCase() < b.key.toLowerCase()) {
+        return -1;
+    } else if (a.key.toLowerCase() > b.key.toLowerCase()) {
+        return 1;
+    }
+    return 0;
+}
+
+/**
+ * Sort function for d3.pie-transformed data array to sort Finished library bin Object last
+ * @param {Object} a		"d3.pie.arc" object
+ * @param {Object} b		"d3.pie.arc"  object
+ * @returns {Number} A negative number if a should be sorted before b, a positive number if vice versa, otherwise 0 
+ */
+function sortPieDataFinLibLast(a, b) {
+    // See comment above in sortFinLibLast function
+    if (a.data.key == "Finished library") {
+        return 1;
+    } else if (b.data.key == "Finished library") {
+        return -1;
+    }
+    if (a.data.key.toLowerCase() < b.data.key.toLowerCase()) {
+        return -1;
+    } else if (a.data.key.toLowerCase() > b.data.key.toLowerCase()) {
+        return 1;
+    }
+    return 0;
+}
 
 /**
  * Sort function for layer objects to sort by platform.<br>
@@ -157,6 +222,12 @@ function totalY(dataset, domain) {
     return tot;
 }
 
+/**
+ * Creates data set with project counts per time bin since a specified start date
+ * @param {Object} json		A parsed json stream
+ * @param {Date} startDate    A Date object to specify start of date range to include
+ * @returns {Object}    An object with project counts per time bin
+ */
 function makeDeltimeDataset(json, startDate) {
     var data = [];
     var rows = json["rows"];
@@ -196,6 +267,14 @@ function makeDeltimeDataset(json, startDate) {
     
     return data.sort(sortCats);
 }
+
+
+/**
+ * Creates data set with project counts per application since a specified start date
+ * @param {Object} json		A parsed json stream
+ * @param {Date} startDate    A Date object to specify start of date range to include
+ * @returns {Object}    An object with project counts per application
+ */
 function makeApplProjDataset(json, startDate) {
     var data = [];
     var rows = json["rows"];
@@ -224,13 +303,19 @@ function makeApplProjDataset(json, startDate) {
         }
     }
     for(application in nums) {
-        //if(application == "WG re-seq") { application = "Whole genome re-seq"; }
         data.push( {"key": application, "value": nums[application]} );
     }
     return data;
 }
 
-function makeApplSampleDataset(json, startDate) {
+/**
+ * Creates data set with sample counts per application since a specified start date
+ * @param {Object} json		A parsed json stream
+ * @param {Date} startDate    A Date object to specify start of date range to include
+ * @param {boolean} includeFinishedLibrary    Whether Finished Library projects should be included or not
+ * @returns {Object}    An object with sample counts per application
+ */
+function makeApplSampleDataset(json, startDate, includeFinishedLibrary) {
     var data = [];
     var rows = json["rows"];
     //console.log(rows);
@@ -254,6 +339,11 @@ function makeApplSampleDataset(json, startDate) {
             //console.log("skipping");
             continue;
         } //skip if queue date is before startDate
+
+        if (!includeFinishedLibrary && application == "Finished library") {
+            samples = 0; // set to a value to get Finished libraries as a category for the legend
+        }
+
         if(nums[application]) {
             nums[application] += samples;
         } else {
@@ -266,6 +356,13 @@ function makeApplSampleDataset(json, startDate) {
     return data;
 }
 
+/**
+ * Creates data set with read(-pair) counts per lane since a specified start date and sequencing mode
+ * @param {Object} json		A parsed json stream
+ * @param {Date} startDate    A Date object to specify start of date range to include
+ * @param {string} filter    The sequencing mode for which data should be extracted
+ * @returns {Object}    An array of lane read(-pair) counts in millions
+ */
 function makeReadsDataset(json, startDate, filter) {
     var rows = json.rows;
     var values = [];
@@ -293,7 +390,12 @@ function makeReadsDataset(json, startDate, filter) {
     return values;
 }
 
-//makeAffiliationDataset(json, twelveWeeks)
+/**
+ * Creates data set with number of projects per organisation since a specified start date
+ * @param {Object} json		A parsed json stream
+ * @param {Date} startDate    A Date object to specify start of date range to include
+ * @returns {Array}    An array of organisation bin objects
+ */
 function makeAffiliationDataset(json, startDate) {
     var rows = json.rows;
     //console.log(rows);
@@ -726,17 +828,10 @@ function generateQueueSampleStackDataset(json, cmpDate, ptype) {
 }
 
 
-
-var sortCats = function (a, b) {
-    var order = [];
-    order["0-6 w"] = 1;
-    order["6-12 w"] = 2;
-    order["12-24 w"] = 3;
-    order["24-52 w"] = 4;
-    order["Not closed"] = 5;
-    return order[a.key] - order[b.key];
-}
-
+/**
+ * Draws a "half" pie chart of delivery time bins
+ * @param {Object} dataset  Parsed data
+ */
 function drawDelTimes(dataset) {
     var w = 350;
     var h = 200;
@@ -811,6 +906,10 @@ function drawDelTimes(dataset) {
       .text(function(d) { return "(" + d.data.value + ")"; });
 }
 
+/**
+ * Draws a pie chart of number of projects per application
+ * @param {Object} dataset  Parsed data
+ */
 function drawApplProj(dataset) {
     var w = 300;
     var h = 300;
@@ -830,7 +929,8 @@ function drawApplProj(dataset) {
                 .value(function(d) {
                     return d.value;
                 })
-                .sort(null)
+                //.sort(null)
+                .sort(sortFinLibLast) // Sort the indata so that Finished library will be last
                 .startAngle(startA)
                 .endAngle(endA)
                 ;
@@ -838,9 +938,9 @@ function drawApplProj(dataset) {
     
     //Easy colors accessible via a 10-step ordinal scale
     //var color = d3.scale.category10();
-    var color = d3.scale.category20();
+    //var color = d3.scale.category20();
     //var color = d3.scale.category20b();
-    //var color = d3.scale.category20c();
+    var color = d3.scale.category20c();
     
     //Create SVG element
     var svg = d3.select("#application_projects")
@@ -850,7 +950,9 @@ function drawApplProj(dataset) {
     
     //Set up groups
     var arcs = svg.selectAll("g.arc")
-                  .data(pie(dataset))
+                  .data(pie(dataset).sort(sortPieDataFinLibLast)) // Sort the data so that Finished library
+                                                                  // will be last (see comment in sortFinLibLast
+                                                                  // and sortPieDataFinLibLast functions)
                   .enter()
                   .append("g")
                   .attr("class", "arc")
@@ -881,6 +983,10 @@ function drawApplProj(dataset) {
 
 }
 
+/**
+ * Draws a pie chart of number of samples per application & a legend
+ * @param {Object} dataset  Parsed data
+ */
 function drawApplSample(dataset) {
     var w = 450;
     var h = 300;
@@ -900,17 +1006,17 @@ function drawApplSample(dataset) {
                 .value(function(d) {
                     return d.value;
                 })
-                .sort(null)
+                //.sort(null)
+                .sort(sortFinLibLast) // Sort the indata so that Finished library will be last
                 .startAngle(startA)
                 .endAngle(endA)
                 ;
-    
-    
+        
     //Easy colors accessible via a 10-step ordinal scale
     //var color = d3.scale.category10();
-    var color = d3.scale.category20();
+    //var color = d3.scale.category20();
     //var color = d3.scale.category20b();
-    //var color = d3.scale.category20c();
+    var color = d3.scale.category20c();
 
     //Create SVG element
     var svg = d3.select("#application_samples")
@@ -920,7 +1026,10 @@ function drawApplSample(dataset) {
     
     //Set up groups
     var arcs = svg.selectAll("g.arc")
-                  .data(pie(dataset))
+                  .data(pie(dataset).sort(sortPieDataFinLibLast)) // Sort the data so that Finished library
+                                                                  // will be last (see comment in sortFinLibLast
+                                                                  // and sortPieDataFinLibLast functions)
+
                   .enter()
                   .append("g")
                   .attr("class", "arc")
@@ -960,7 +1069,7 @@ function drawApplSample(dataset) {
       .attr("width", 100);
 
     legend.selectAll('rect')
-      .data(pie(dataset))
+      .data(pie(dataset).sort(sortPieDataFinLibLast))
       .enter()
       .append("rect")
 	  .attr("x", legendXOffset)
@@ -972,7 +1081,7 @@ function drawApplSample(dataset) {
       })
       
     legend.selectAll('text')
-      .data(pie(dataset))
+      .data(pie(dataset).sort(sortPieDataFinLibLast))
       .enter()
       .append("text")
 	  .attr("x", legendXOffset + 13)
@@ -984,6 +1093,12 @@ function drawApplSample(dataset) {
       });
    
 }
+
+/**
+ * Draws a histogram of number of read-pairs per lane
+ * @param {Object} dataset  Parsed data
+ * @param {String} divID  Id of DOM div to where plot should reside
+ */
 function drawReads(values, divID) {
     var margin = {top: 10, right: 30, bottom: 30, left: 10},
         width = 320 - margin.left - margin.right,
@@ -1060,6 +1175,11 @@ function drawReads(values, divID) {
             
 }
 
+/**
+ * Draws a pie chart of number of projects per institutional affiliation & a legend
+ * @param {Object} dataset  Parsed data
+ * @param {String} divID  Id of DOM div to where plot should reside
+ */
 function drawAffiliationProj(dataset, divID) {
     var w = 450;
     var h = 380;

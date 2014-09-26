@@ -72,7 +72,7 @@
 			<h2>Applications (# projects)</h2>			
 		</div>
 		<div id="application_samples">
-			<h2>Applications (# samples)</h2>			
+			<h2>Applications (# samples prepared)</h2>			
 		</div>
 		<br class="clear">
 		<div id="reads_per_lane">
@@ -121,7 +121,7 @@
 
 			var applSampleUrl = "getCouchDbData.php?db=projects&design=kpi_external&view=applications_samples&reduce=false";
 			d3.json(applSampleUrl, function(json) {
-				var dataset = makeApplSampleDataset(json, startDate);
+				var dataset = makeApplSampleDataset(json, startDate, false); // exclude Finished library samples
 				//console.log(dataset);
 				drawApplSample(dataset);
 				
