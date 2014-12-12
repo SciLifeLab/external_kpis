@@ -13,7 +13,7 @@
         <div class="tooltip" style="opacity: 0"></div>
 
 		<h1>NGI Stockholm status</h1>
-		<p id="date_info"><em>Data generated for projects started since <span id="date"></span></em></p>
+		<p id="date_info"><em>Data generated for projects started since <span id="date"></span> at the <strong>Genomics Production facility</strong></em></p>
 
 		<div id="queue">
 			<h2 style="margin-bottom: 3px">Current Queue - projects waiting to be processed after passing reception control</h2>
@@ -27,9 +27,6 @@
 						<h4 style="float: left">Total no. of samples per application category</h4>
 						<br class="clear">
 					</div>
-					<div id="queue_lane_load_lp">
-						<h4>Total no. of lanes per seq platform</h4>
-					</div>
 					<br class="clear">
 					<div id="explanation_lp">
 						<em>Queue time is dependent on the number of "worksets". A workset is a batch of samples processed
@@ -38,9 +35,6 @@
 						Metagenome, and WG re-seq; <strong>RNA</strong> - RNA-seq (total RNA);
 						<strong>SeqCap</strong> - Sequence capture; <strong>Other</strong> - any other
 						applications</em>
-						<br>
-						<em>No. of lanes indicates the number of lanes these samples will occupy on the sequencing
-						instruments once library preparation is done</em>
 					</div>
 						
 				</div>
@@ -154,19 +148,16 @@
 			d3.json(queueUrl, function(sample_json) {
 			    //Generate data sets
 				var sampleQueue = generateQueueSampleStackDataset(sample_json, today);
-				var libprepLaneQueue = generateQueueLaneLPStackDataset(sample_json, today);
 				var finlibLaneQueue = generateQueueLaneFLStackDataset(sample_json, today);
 		        
 				//Set the 'normal' max values for the different load visualizations
 				var queueLpSampleLoadNormalMax = 200; //# samples in queue for libprep
-				var queueLpLaneLoadNormalMax = 60; //# lanes worth of samples in queue for libprep
 				var queueFlLaneLoadNormalMax = 30; //# lanes of finished libraries in queue for sequencing
 				
 				var plot_width = 600;
 				var bar_width = plot_width / 8;
 				var panelHeights = 250;
 				drawStackedBars (sampleQueue, "queue_sample_load_lp", bar_width * 4, panelHeights, "samples", true, queueLpSampleLoadNormalMax, true);
-				drawStackedBars (libprepLaneQueue, "queue_lane_load_lp", bar_width * 2, panelHeights, "lanes", false, queueLpLaneLoadNormalMax, false);
 				drawStackedBars (finlibLaneQueue, "queue_lane_load_fl", bar_width * 2, panelHeights, "lanes", false, queueFlLaneLoadNormalMax, false);
 				
 				//console.log(sampleQueue);
