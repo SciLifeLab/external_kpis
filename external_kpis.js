@@ -272,6 +272,7 @@ function makeDeltimeDataset(json, startDate) {
     }
     //console.log(rows);
     var nums = new Object;
+    var total = 0;
     for (var i = 0; i < rows.length; i++) {
         var ka = rows[i]["key"];
         var bin = ka[0]; // bin name
@@ -292,9 +293,10 @@ function makeDeltimeDataset(json, startDate) {
         } else {
             nums[bin] = 1;
         }
+        total++;
     }
     for(bin in nums) {
-        data.push( {"key": bin, "value": nums[bin]} );
+        data.push( {"key": bin, "value": nums[bin], "percent": Math.round(100 * nums[bin]/total) } );
     }
     
     return data.sort(sortCats);
@@ -937,7 +939,7 @@ function drawDelTimes(dataset) {
       })
       .style("fill", "White")
       .style("font", "bold 12px Arial")
-      .text(function(d) { return "(" + d.data.value + ")"; });
+      .text(function(d) { return "(" + d.data.value + " / " + d.data.percent + "%" + ")"; });
 }
 
 /**
@@ -1513,6 +1515,8 @@ function drawStackedBars (dataset, divID, width, height, unit, showFirstInQueue,
             .attr("x", -p[3] + 18)
             .attr("dy", ".35em")
             .text(d3.format(",d"))
+            .style("stroke", "#000")
+            .style("stroke-width", 0.2)
             .style("fill", loadCol)
             ;
     
