@@ -20,10 +20,27 @@ var organisationNames = {
 }
 
 // Lookup table for applications
+// Maps our application names to categories agreed with Uppsala
+//
+// Does not catch the Epigenetics category (Methylation, Bishulphite, MedIP, RRBS, ...)
 var applicationNames = {
+    "Amplicon": "Target re-seq",
+    "cDNA": "RNA-seq",
+    "ChIP-seq": "",
+    "Custom capture": "Target re-seq",
+    "de novo": "de novo seq",
+    "Exome capture": "Target re-seq",
+    "Mate-pair": "de novo seq",
+    "Metagenome": "Metagenomics",
+    "miRNA-seq": "",
+    "RNA-seq (mRNA)": "RNA-seq",
+    "RNA-seq (RiboZero)": "RNA-seq",
+    "RNA-seq (Ribominus)": "RNA-seq",
+    "RNA-seq (total RNA)": "RNA-seq",
+    "Special": "Other",
     "WG re-seq": "Whole genome re-seq",
-    "de novo": "de novo seq",    
     "WG re-seq (IGN)": "Whole genome re-seq (hum)",
+    "Finished library": "",
 }
 
 
@@ -59,9 +76,16 @@ function sortFinLibLast(a, b) {
     // to sort the transformed array of a d3.pie object so that the Finished library bin object
     // comes last when we feed that to the pie and legend drawing code (to get the colours to be the same)
     
+    // 'Finished library' last
     if (a.key == "Finished library") {
         return 1;
     } else if (b.key == "Finished library") {
+        return -1;
+    }
+    // 'Other' second to last
+    if (a.key == "Other") {
+        return 1;
+    } else if (b.key == "Other") {
         return -1;
     }
     if (a.key.toLowerCase() < b.key.toLowerCase()) {
@@ -80,9 +104,17 @@ function sortFinLibLast(a, b) {
  */
 function sortPieDataFinLibLast(a, b) {
     // See comment above in sortFinLibLast function
+
+    // 'Finished library' last
     if (a.data.key == "Finished library") {
         return 1;
     } else if (b.data.key == "Finished library") {
+        return -1;
+    }
+    // 'Other' second to last
+    if (a.data.key == "Other") {
+        return 1;
+    } else if (b.data.key == "Other") {
         return -1;
     }
     if (a.data.key.toLowerCase() < b.data.key.toLowerCase()) {
@@ -240,6 +272,7 @@ function makeDeltimeDataset(json, startDate) {
     }
     //console.log(rows);
     var nums = new Object;
+    var total = 0;
     for (var i = 0; i < rows.length; i++) {
         var ka = rows[i]["key"];
         var bin = ka[0]; // bin name
@@ -260,9 +293,10 @@ function makeDeltimeDataset(json, startDate) {
         } else {
             nums[bin] = 1;
         }
+        total++;
     }
     for(bin in nums) {
-        data.push( {"key": bin, "value": nums[bin]} );
+        data.push( {"key": bin, "value": nums[bin], "percent": Math.round(100 * nums[bin]/total) } );
     }
     
     return data.sort(sortCats);
@@ -289,6 +323,8 @@ function makeApplProjDataset(json, startDate) {
     var nums = new Object;
     for (var i = 0; i < rows.length; i++) {
         var application = rows[i]["key"];
+        // Check lookup table if it belongs to a category or should have a more verbose name
+        if(applicationNames[application]) { application = applicationNames[application]; }
         var v = rows[i]["value"];
         var od = v[1];
         //console.log(bin + ", " + qd);
@@ -329,7 +365,7 @@ function makeApplSampleDataset(json, startDate, includeFinishedLibrary) {
     var nums = new Object;
     for (var i = 0; i < rows.length; i++) {
         var application = rows[i]["key"];
-        // Check lookup table if there is a longer name
+        // Check lookup table if it belongs to a category or should have a more verbose name
         if(applicationNames[application]) { application = applicationNames[application]; }
         var v = rows[i]["value"];
         var od = v[1];
@@ -903,7 +939,7 @@ function drawDelTimes(dataset) {
       })
       .style("fill", "White")
       .style("font", "bold 12px Arial")
-      .text(function(d) { return "(" + d.data.value + ")"; });
+      .text(function(d) { return "(" + d.data.value + " / " + d.data.percent + "%" + ")"; });
 }
 
 /**
@@ -1091,7 +1127,7 @@ function drawApplSample(dataset) {
         var text = d.data.key;
         return text;
       });
-   
+
 }
 
 /**
@@ -1479,6 +1515,8 @@ function drawStackedBars (dataset, divID, width, height, unit, showFirstInQueue,
             .attr("x", -p[3] + 18)
             .attr("dy", ".35em")
             .text(d3.format(",d"))
+            .style("stroke", "#000")
+            .style("stroke-width", 0.2)
             .style("fill", loadCol)
             ;
     
