@@ -918,7 +918,7 @@ function drawDelTimes(dataset) {
         .attr("d", arc);
     
     //Labels
-    arcs.append("text")
+    arcs.filter(function(d) { return d.endAngle - d.startAngle > .15; }).append("text") //Skip labels for smaller arcs
         .attr("transform", function(d) {
             return "translate(" + arc.centroid(d) + ")";
         })
